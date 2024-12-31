@@ -15,8 +15,11 @@ export default tseslint.config(
     files: ['**/*.{ts,tsx}'],
     languageOptions: {
       ecmaVersion: 2020,
-      globals: globals.browser,
-      parser: '@typescript-eslint/parser',
+      globals: {
+        ...globals.browser,
+        React: true
+      },
+      parser: tseslint.parser,
       parserOptions: {
         project: './tsconfig.json'
       }
