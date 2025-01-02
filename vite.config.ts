@@ -1,17 +1,19 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react-swc'
+import { defineConfig } from 'vite';
+import reactSWC from '@vitejs/plugin-react-swc';
+import { resolve } from 'path';
+import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
-  e2e: {
-    setupNodeEvents(on, config) {},
-    baseUrl: 'http://localhost:5173',
-    supportFile: false
+  plugins: [
+    reactSWC(),
+    tsconfigPaths(),
+  ],
+  build: {
+    outDir: 'dist',
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'index.html'),
+      },
+    },
   },
-  component: {
-    devServer: {
-      framework: 'react',
-      bundler: 'vite'
-    }
-  }
-  plugins: [react()],
-})
+});
