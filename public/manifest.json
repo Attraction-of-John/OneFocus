@@ -1,0 +1,52 @@
+{
+    "manifest_version": 3,
+    "name": "OneFocus",
+    "short_name": "OneFocus",
+    "version": "1.0.0",
+    "description": "OneFocus presents a comprehensive solution to enhance productivity by integrating time management with task tracking and continuous motivation within a Chrome extension!",
+
+    "chrome_url_overrides": {
+        "newtab": "index.html"
+    },
+
+    "action": {
+        "default_icon": {
+            "16": "icon16.png",
+            "32": "icon32.png",
+            "48": "icon48.png",
+            "128": "icon128.png"
+        }
+    },
+
+    "icons": {
+        "16": "icon16.png",
+        "32": "icon32.png",
+        "48": "icon48.png",
+        "128": "icon128.png"
+    },
+
+    "permissions": [
+        "activeTab",
+        "tabs",
+        "storage",
+        "scripting",
+        "webRequest"
+    ],
+
+    "host_permissions": ["<all_urls>"],
+
+    "background": {
+        "service_worker": "background.js",
+        "type": "module"
+    },
+
+    "content_security_policy": {
+        "extension_pages": "script-src 'self'; object-src 'self'"
+    },
+
+    "web_accessible_resources": [{
+        "resources": ["index.html", "*.ts", "*.js", "*.tsx", "*.jsx", "*.css", "*.png"],
+        "matches": ["<all_urls>"]
+    }]
+
+}
