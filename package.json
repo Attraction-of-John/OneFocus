@@ -52,7 +52,6 @@
     "globals": "^15.13.0",
     "postcss": "^8.4.49",
     "prettier": "^3.2.5",
-    "prettier-plugin-tailwindcss": "^0.6.9",
     "socket.io-client": "4.7.4",
     "storybook": "8.4.7",
     "supports-color": "^10.0.0",
