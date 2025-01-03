@@ -29,11 +29,12 @@
         "activeTab",
         "tabs",
         "storage",
-        "scripting",
-        "webRequest"
+        "scripting"
     ],
 
-    "host_permissions": ["<all_urls>"],
+    "host_permissions": [
+        "chrome-extension://hnpcdefnpjdinecpbdnmkipnnmcchlkh/*"
+    ],
 
     "background": {
         "service_worker": "background.js",
@@ -45,7 +46,7 @@
     },
 
     "web_accessible_resources": [{
-        "resources": ["index.html", "*.ts", "*.js", "*.tsx", "*.jsx", "*.css", "*.png"],
+        "resources": ["index.html", "*.js", "*.css", "*.png"],
         "matches": ["<all_urls>"]
     }]
 
