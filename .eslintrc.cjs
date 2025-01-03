@@ -13,10 +13,6 @@ module.exports = {
   plugins: ['react', 'react-refresh'],
   ignorePatterns: ['dist', '.eslintrc.cjs', 'vite.config.ts'],
   rules: {
-    'react-refresh/only-export-components': [
-      'warn',
-      { allowConstantExport: true },
-    ],
-    'prettier/prettier': 'error'
+    'tailwindcss/no-custom-classname': 'off',
   },
-}
+};
