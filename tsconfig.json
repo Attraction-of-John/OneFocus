@@ -26,13 +26,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": [
-    "src",
-    "./cypress.d.ts",
-    "public/background.js",
-    "public/manifest.json"
-  ],
-  "references": [
-    { "path": "./tsconfig.node.json" }
-  ]
+  "include": ["src", "./cypress.d.ts", "manifest.json"],
+  "references": [{ "path": "./tsconfig.node.json" }]
 }
