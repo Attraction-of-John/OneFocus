@@ -2,9 +2,9 @@ close #
 
 ## 📌 Work Contents
 
-## ✅ Issue to Check
+## 📋 Detailed & Screenshot
 
-## 📸 Screenshot
+## ✅ Issue to Check
 
 ## ⭕ Confirmation Factor
 
