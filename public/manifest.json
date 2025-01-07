@@ -1,53 +1,54 @@
 {
-    "manifest_version": 3,
-    "name": "OneFocus",
-    "short_name": "OneFocus",
-    "version": "1.0.0",
-    "description": "OneFocus presents a comprehensive solution to enhance productivity by integrating time management with task tracking and continuous motivation within a Chrome extension!",
+  "manifest_version": 3,
+  "name": "OneFocus",
+  "short_name": "OneFocus",
+  "version": "1.0.0",
+  "description": "OneFocus presents a comprehensive solution to enhance productivity by integrating time management with task tracking and continuous motivation within a Chrome extension!",
 
-    "chrome_url_overrides": {
-        "newtab": "index.html"
-    },
+  "chrome_url_overrides": {
+    "newtab": "index.html"
+  },
 
-    "action": {
-        "default_icon": {
-            "16": "icon16.png",
-            "32": "icon32.png",
-            "48": "icon48.png",
-            "128": "icon128.png"
-        }
-    },
+  "action": {
+    "default_icon": {
+      "16": "/extension-icons/icon16.png",
+      "32": "/extension-icons/icon32.png",
+      "48": "/extension-icons/icon48.png",
+      "128": "/extension-icons/icon128.png"
+    }
+  },
 
-    "icons": {
-        "16": "icon16.png",
-        "32": "icon32.png",
-        "48": "icon48.png",
-        "128": "icon128.png"
-    },
+  "icons": {
+    "16": "/extension-icons/icon16.png",
+    "32": "/extension-icons/icon32.png",
+    "48": "/extension-icons/icon48.png",
+    "128": "/extension-icons/icon128.png"
+  },
 
-    "permissions": [
-        "activeTab",
-        "tabs",
-        "storage",
-        "scripting"
-    ],
+  "permissions": ["activeTab", "tabs", "storage", "scripting"],
 
-    "host_permissions": [
-        "chrome-extension://hnpcdefnpjdinecpbdnmkipnnmcchlkh/*"
-    ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
 
-    "background": {
-        "service_worker": "background.js",
-        "type": "module"
-    },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "css": []
+    }
+  ],
 
-    "content_security_policy": {
-        "extension_pages": "script-src 'self'; object-src 'self'"
-    },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; font-src 'self' https://fastly.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff;"
+  },
 
-    "web_accessible_resources": [{
-        "resources": ["index.html", "*.js", "*.css", "*.png"],
-        "matches": ["<all_urls>"]
-    }]
-
+  "web_accessible_resources": [
+    {
+      "resources": ["index.html", "assets/*", "background-imgs/*", "*.js", "*.css", "*.png", "*.svg", "*.jpg"],
+      "matches": ["<all_urls>"],
+      "use_dynamic_url": true
+    }
+  ]
 }

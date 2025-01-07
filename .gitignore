@@ -33,3 +33,8 @@ dist-ssr
 !.yarn/versions
 
 *storybook.log
+
+# Vite config generated files
+*.tsbuildinfo
+vite.config.js
+vite.config.d.ts

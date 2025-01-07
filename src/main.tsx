@@ -1,10 +1,13 @@
+import ReactDOM from 'react-dom/client';
+import { createHashRouter, RouterProvider } from 'react-router-dom';
+import './styles/index.css';
+import App from '@/App';
 
-import { createRoot } from 'react-dom/client'
-import '@/styles/index.css'
-import App from '@/App'
+const router = createHashRouter([
+  {
+    path: '/',
+    element: <App />,
+  },
+]);
 
-createRoot(document.getElementById('root')!).render(
-
-    <App />
-
-)
+ReactDOM.createRoot(document.getElementById('root')!).render(<RouterProvider router={router} />);
