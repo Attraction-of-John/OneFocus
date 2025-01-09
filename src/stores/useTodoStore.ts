@@ -4,7 +4,8 @@ import { Todo } from '@/types/todo.interface';
 interface TodoState {
   todoList: Todo[];
   addTodoList: (todo: Todo) => void;
-  completeTodoList: (id: number) => void;
+  updateTodoList: (id: number, updates: Partial<Todo>) => void;
+  deleteTodoList: (id: number) => void;
   setTodoList: (todos: Todo[]) => void;
 }
 
@@ -17,10 +18,15 @@ export const useTodoStore = create<TodoState>((set) => ({
       return { todoList: updatedList };
     });
   },
-  completeTodoList: (id) => {
+  updateTodoList: (id, updates) => {
     const updatedList = useTodoStore
       .getState()
-      .todoList.map((todo) => (todo.id === id ? { ...todo, completed: !todo.completed } : todo));
+      .todoList.map((todo) => (todo.id === id ? { ...todo, ...updates } : todo));
+    set({ todoList: updatedList });
+    chrome.runtime.sendMessage({ type: 'UPDATE_TODO_LIST', todoList: updatedList });
+  },
+  deleteTodoList: (id) => {
+    const updatedList = useTodoStore.getState().todoList.filter((todo) => todo.id !== id);
     set({ todoList: updatedList });
     chrome.runtime.sendMessage({ type: 'UPDATE_TODO_LIST', todoList: updatedList });
   },
