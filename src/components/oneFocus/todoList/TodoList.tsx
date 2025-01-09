@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import TodoDialog from './TodoDialog';
-import TodoListItem from './TodoListItem';
+import TodoListItem from './TodoItem';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 
@@ -56,13 +57,13 @@ const TodoList: React.FC = () => {
   return (
     <>
       <TodoDialog />
-      <Card className="bg-stone-100/50 backdrop-blur-lg shadow-xl">
+      <Card className="bg-stone-100/50 backdrop-blur-lg shadow-xl h-[500px]">
         <CardHeader>
           <CardTitle>TodoList</CardTitle>
         </CardHeader>
         <CardContent className="px-6">
           {/* Todo List */}
-          <div className="space-y-2">
+          <ScrollArea className="h-96 rounded-md p-3">
             {/* TODO 임시 코드 */}
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
               <SortableContext
@@ -72,9 +73,15 @@ const TodoList: React.FC = () => {
                 {testTodos.map((todo) => (
                   <TodoListItem key={todo.id} todo={todo} />
                 ))}
+                {testTodos.map((todo) => (
+                  <TodoListItem key={todo.id} todo={todo} />
+                ))}
+                {testTodos.map((todo) => (
+                  <TodoListItem key={todo.id} todo={todo} />
+                ))}
               </SortableContext>
             </DndContext>
-          </div>
+          </ScrollArea>
         </CardContent>
       </Card>
     </>

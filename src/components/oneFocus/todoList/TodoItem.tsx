@@ -11,7 +11,7 @@ interface TodoListItemProps {
   todo: Todo;
 }
 
-const TodoListItem: React.FC<TodoListItemProps> = ({ todo }) => {
+const TodoItem: React.FC<TodoListItemProps> = ({ todo }) => {
   const { updateTodoList, deleteTodoList } = useTodoStore();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: todo.id.toString(),
@@ -85,4 +85,4 @@ const TodoListItem: React.FC<TodoListItemProps> = ({ todo }) => {
   );
 };
 
-export default TodoListItem;
+export default TodoItem;
