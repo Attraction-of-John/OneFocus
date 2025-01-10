@@ -1,63 +1,90 @@
 import { useState } from 'react';
-import { Plus, Check } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Todo } from '@/types/todo.interface';
-import { useTodoStore } from '@/stores/useTodoStore';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import TodoDialog from './TodoDialog';
+import TodoListItem from './TodoItem';
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { arrayMove, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 
 const TodoList: React.FC = () => {
-  const { todoList, addTodoList, completeTodoList } = useTodoStore();
-  const [newTodo, setNewTodo] = useState('');
+  const testTodo1 = {
+    order: 1,
+    completed: true,
+    id: 1,
+    text: '테스트1',
+    allottedTime: 30,
+    category: '일반',
+    deadline: new Date().toISOString().split('T')[0],
+  };
 
-  const addTodo = () => {
-    if (newTodo.trim()) {
-      const newTodoItem: Todo = {
-        id: Date.now(),
-        text: newTodo,
-        completed: false,
-        order: 0,
-        allottedTime: 0,
-        category: '일',
-      };
-      addTodoList(newTodoItem);
-      setNewTodo('');
+  const testTodo2 = {
+    order: 2,
+    completed: false,
+    id: 2,
+    text: '테스트2',
+    allottedTime: 30,
+    category: '일반',
+    deadline: new Date().toISOString().split('T')[0],
+  };
+
+  const testTodo3 = {
+    order: 3,
+    completed: false,
+    id: 3,
+    text: '테스트3',
+    allottedTime: 30,
+    category: '일반',
+    deadline: new Date().toISOString().split('T')[0],
+  };
+
+  // 테스트 Todo를 상태로 관리
+  const [testTodos, setTestTodos] = useState([testTodo1, testTodo2, testTodo3]);
+
+  const sensors = useSensors(useSensor(PointerSensor));
+
+  const handleDragEnd = (event: any) => {
+    const { active, over } = event;
+
+    if (active.id !== over?.id) {
+      setTestTodos((items) => {
+        const oldIndex = items.findIndex((item) => item.id.toString() === active.id);
+        const newIndex = items.findIndex((item) => item.id.toString() === over?.id);
+        return arrayMove(items, oldIndex, newIndex);
+      });
     }
   };
 
   return (
-    <Card className="bg-stone-100/50 backdrop-blur-lg shadow-xl">
-      <CardContent className="p-6">
-        {/* Todo Input */}
-        <div className="flex gap-2 mb-6">
-          <Input
-            value={newTodo}
-            onChange={(e) => setNewTodo(e.target.value)}
-            placeholder="새로운 할일을 입력하세요"
-            className="bg-white/50"
-            onKeyDown={(e) => e.key === 'Enter' && addTodo()}
-          />
-          <Button onClick={addTodo} size="sm">
-            <Plus className="h-4 w-4" />
-          </Button>
-        </div>
-
-        {/* Todo List */}
-        <div className="space-y-2">
-          {todoList.map((todo) => (
-            <div
-              key={todo.id}
-              className="flex items-center gap-2 p-3 bg-white/50 rounded-full hover:bg-white/70 transition-colors"
-            >
-              <Button size="sm" variant="ghost" onClick={() => completeTodoList(todo.id)}>
-                <Check className={`h-4 w-4 ${todo.completed ? 'text-green-500' : 'text-gray-400'}`} />
-              </Button>
-              <span className={`flex-1 ${todo.completed ? 'line-through text-gray-500' : ''}`}>{todo.text}</span>
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+    <>
+      <TodoDialog />
+      <Card className="bg-stone-100/50 backdrop-blur-lg shadow-xl h-[53vh]">
+        <CardHeader>
+          <CardTitle>TodoList</CardTitle>
+        </CardHeader>
+        <CardContent className="px-6">
+          {/* Todo List */}
+          <ScrollArea className="h-[38vh] rounded-md p-3">
+            {/* TODO 임시 코드 */}
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext
+                items={testTodos.map((todo) => todo.id.toString())}
+                strategy={verticalListSortingStrategy}
+              >
+                {testTodos.map((todo) => (
+                  <TodoListItem key={todo.id} todo={todo} />
+                ))}
+                {testTodos.map((todo) => (
+                  <TodoListItem key={todo.id} todo={todo} />
+                ))}
+                {testTodos.map((todo) => (
+                  <TodoListItem key={todo.id} todo={todo} />
+                ))}
+              </SortableContext>
+            </DndContext>
+          </ScrollArea>
+        </CardContent>
+      </Card>
+    </>
   );
 };
 

@@ -14,5 +14,6 @@ module.exports = {
   ignorePatterns: ['dist', '.eslintrc.cjs', 'vite.config.ts'],
   rules: {
     'tailwindcss/no-custom-classname': 'off',
+    '@typescript-eslint/no-explicit-any': 'off',
   },
 };
