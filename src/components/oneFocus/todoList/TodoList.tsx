@@ -57,13 +57,13 @@ const TodoList: React.FC = () => {
   return (
     <>
       <TodoDialog />
-      <Card className="bg-stone-100/50 backdrop-blur-lg shadow-xl h-[500px]">
+      <Card className="bg-stone-100/50 backdrop-blur-lg shadow-xl h-[53vh]">
         <CardHeader>
           <CardTitle>TodoList</CardTitle>
         </CardHeader>
         <CardContent className="px-6">
           {/* Todo List */}
-          <ScrollArea className="h-96 rounded-md p-3">
+          <ScrollArea className="h-[38vh] rounded-md p-3">
             {/* TODO 임시 코드 */}
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
               <SortableContext
