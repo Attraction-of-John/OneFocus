@@ -84,7 +84,7 @@ const TodoItem: React.FC<TodoListItemProps> = ({ todo }) => {
               />
             ) : (
               <span
-                className={`font-normal ${todo.completed ? 'line-through text-gray-500' : ''}`}
+                className={`text-lg ${todo.completed ? 'line-through text-gray-500' : ''}`}
                 onClick={() => handleFieldClick('text')}
               >
                 {todo.text}
