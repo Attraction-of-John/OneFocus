@@ -71,5 +71,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
       });
       break;
+
+    case 'GET_SUGGESTIONS':
+      fetch(`https://suggestqueries.google.com/complete/search?client=chrome&q=${encodeURIComponent(message.query)}`)
+        .then((response) => response.json())
+        .then((data) => sendResponse({ suggestions: data[1] }))
+        .catch((error) => sendResponse({ error: error.message }));
+      return true; // 비동기 응답을 위해 true 반환
   }
 });
