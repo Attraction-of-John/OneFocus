@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { Todo } from '@/types/todo.interface';
+import { subscribeWithSelector } from 'zustand/middleware';
 
 interface TodoState {
   todoList: Todo[];
@@ -9,29 +10,35 @@ interface TodoState {
   setTodoList: (todos: Todo[]) => void;
 }
 
-export const useTodoStore = create<TodoState>((set) => ({
-  todoList: [],
-  addTodoList: (todo) => {
-    set((state) => {
-      const updatedList = [...state.todoList, todo];
-      chrome.runtime.sendMessage({ type: 'UPDATE_TODO_LIST', todoList: updatedList });
-      return { todoList: updatedList };
-    });
-  },
-  updateTodoList: (id, updates) => {
-    const updatedList = useTodoStore
-      .getState()
-      .todoList.map((todo) => (todo.id === id ? { ...todo, ...updates } : todo));
-    set({ todoList: updatedList });
-    chrome.runtime.sendMessage({ type: 'UPDATE_TODO_LIST', todoList: updatedList });
-  },
-  deleteTodoList: (id) => {
-    const updatedList = useTodoStore.getState().todoList.filter((todo) => todo.id !== id);
-    set({ todoList: updatedList });
-    chrome.runtime.sendMessage({ type: 'UPDATE_TODO_LIST', todoList: updatedList });
-  },
-  setTodoList: (todoList) => set({ todoList }),
-}));
+export const useTodoStore = create<TodoState>()(
+  subscribeWithSelector((set, get) => ({
+    todoList: [],
+    addTodoList: (todo) => {
+      const maxOrder = get().todoList.reduce((max, t) => Math.max(max, t.order), 0);
+      const newTodo = { ...todo, order: maxOrder + 1 };
+      const updatedList = [...get().todoList, newTodo];
+      set({ todoList: updatedList });
+      chrome.runtime.sendMessage({ type: 'ADD_TODO', todo: newTodo });
+    },
+    updateTodoList: (id, updates) => {
+      const updatedList = get().todoList.map((todo) => (todo.id === id ? { ...todo, ...updates } : todo));
+      set({ todoList: updatedList });
+      const updatedTodo = updatedList.find((todo) => todo.id === id);
+      if (updatedTodo) {
+        chrome.runtime.sendMessage({ type: 'UPDATE_TODO', todo: updatedTodo });
+      }
+    },
+    deleteTodoList: (id) => {
+      const updatedList = get().todoList.filter((todo) => todo.id !== id);
+      set({ todoList: updatedList });
+      chrome.runtime.sendMessage({ type: 'DELETE_TODO', id });
+    },
+    setTodoList: (todoList) => {
+      set({ todoList });
+      chrome.runtime.sendMessage({ type: 'SET_TODO_LIST', todoList });
+    },
+  })),
+);
 
 if (typeof chrome !== 'undefined' && chrome.storage?.local) {
   const loadTodoList = async () => {
@@ -53,3 +60,11 @@ if (typeof chrome !== 'undefined' && chrome.storage?.local) {
 
   loadTodoList();
 }
+
+useTodoStore.subscribe(
+  (state) => state.todoList,
+  (todoList) => {
+    chrome.runtime.sendMessage({ type: 'UPDATE_TODO_LIST', todoList });
+  },
+  { equalityFn: (a, b) => JSON.stringify(a) === JSON.stringify(b) },
+);
