@@ -1,5 +1,12 @@
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Todo } from '@/types/todo.interface';
@@ -12,7 +19,12 @@ import { useState } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import FailDialog from './FailDialog';
 
-const TodoDialog: React.FC = () => {
+interface TodoDialogProps {
+  isOpen: boolean;
+  setIsOpen: (open: boolean) => void;
+}
+
+const TodoDialog: React.FC<TodoDialogProps> = ({ isOpen, setIsOpen }) => {
   const {
     register,
     handleSubmit,
@@ -44,7 +56,16 @@ const TodoDialog: React.FC = () => {
   const onSubmit = (data: Omit<Todo, 'id' | 'completed' | 'order'> & { customCategory?: string }) => {
     try {
       const category = data.category === '직접 작성' ? (data.customCategory ?? '') : (data.category ?? '');
-      addTodoList({ ...data, category, id: Date.now(), completed: false, order: 0 });
+      const todoData = {
+        ...data,
+        category,
+        id: Date.now(),
+        completed: false,
+        order: 0,
+        deadline: isDeadlineEnabled ? data.deadline : undefined,
+      };
+      addTodoList(todoData);
+      setIsOpen(false);
     } catch {
       setShowErrorDialog(true);
     }
@@ -52,16 +73,17 @@ const TodoDialog: React.FC = () => {
 
   return (
     <div className="flex justify-end">
-      <Dialog>
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
-          <Badge className="flex items-center gap-2 text-sm font-semibold">
+          <Badge className="flex items-center gap-2 text-sm font-semibold cursor-pointer transition-colors duration-200">
             <MdOutlineAddTask />
             Todo 추가
           </Badge>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[500px] transition-transform duration-200">
           <DialogHeader>
             <DialogTitle>할일 추가</DialogTitle>
+            <DialogDescription>새로운 할일을 추가하세요.</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit(onSubmit)}>
             <div className="grid gap-4">
@@ -172,7 +194,9 @@ const TodoDialog: React.FC = () => {
                 </div>
               </div>
             </div>
-            <Button type="submit">추가</Button>
+            <Button type="submit" className="w-full my-4">
+              추가
+            </Button>
           </form>
         </DialogContent>
         <FailDialog open={showErrorDialog} onOpenChange={setShowErrorDialog} />

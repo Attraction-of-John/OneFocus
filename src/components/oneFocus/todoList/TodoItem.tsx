@@ -6,6 +6,9 @@ import { useTodoStore } from '@/stores/useTodoStore';
 import { MdDragIndicator } from 'react-icons/md';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useState } from 'react';
+import type { UniqueIdentifier } from '@dnd-kit/core';
+import { formatTime } from '@/utils/todoUtils';
 
 interface TodoListItemProps {
   todo: Todo;
@@ -13,23 +16,47 @@ interface TodoListItemProps {
 
 const TodoItem: React.FC<TodoListItemProps> = ({ todo }) => {
   const { updateTodoList, deleteTodoList } = useTodoStore();
+  const [isEditing, setIsEditing] = useState({
+    text: false,
+    category: false,
+    deadline: false,
+    allottedTime: false,
+  });
+  const [editedTodo, setEditedTodo] = useState(todo);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: todo.id.toString(),
+    id: todo.id.toString() as UniqueIdentifier,
   });
 
   const style = {
-    transform: CSS.Transform.toString(transform),
+    transform: transform
+      ? CSS.Transform.toString({
+          ...transform,
+          x: 0,
+        })
+      : undefined,
     transition,
     zIndex: isDragging ? 1000 : 'auto',
     backgroundColor: isDragging ? 'rgba(59,130,246, 0.1)' : 'inherit',
   };
 
+  const handleFieldClick = (field: keyof typeof isEditing) => {
+    setIsEditing((prev) => ({ ...prev, [field]: true }));
+  };
+
+  const handleChange = (field: keyof Todo, value: any) => {
+    setEditedTodo((prev) => ({ ...prev, [field]: value }));
+    updateTodoList(todo.id, { [field]: value });
+  };
+
+  const handleBlur = (field: keyof typeof isEditing) => {
+    setIsEditing((prev) => ({ ...prev, [field]: false }));
+  };
+
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+    <div ref={setNodeRef} style={style}>
       <div className="group flex items-center gap-4 rounded-2xl p-2 hover:bg-stone-100/30 transition-all">
-        {/* 드래그 핸들을 위한 span에 listeners 적용 */}
-        <span className="cursor-grab active:cursor-grabbing text-gray-500">
-          <MdDragIndicator />
+        <span {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-gray-500">
+          <MdDragIndicator size={20} />
         </span>
         <Button
           size="sm"
@@ -46,27 +73,86 @@ const TodoItem: React.FC<TodoListItemProps> = ({ todo }) => {
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className={`font-medium ${todo.completed ? 'line-through text-gray-500' : ''}`}>{todo.text}</span>
-            <div className="flex gap-1">
-              {todo.category && (
-                <Badge variant="secondary" className="text-xs">
-                  {todo.category}
-                </Badge>
-              )}
-              {todo.deadline && (
-                <Badge variant="outline" className="text-xs">
+            {isEditing.text ? (
+              <input
+                type="text"
+                value={editedTodo.text}
+                onChange={(e) => handleChange('text', e.target.value)}
+                onBlur={() => handleBlur('text')}
+                autoFocus
+                className="flex h-8 w-48 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+              />
+            ) : (
+              <span
+                className={`font-normal ${todo.completed ? 'line-through text-gray-500' : ''}`}
+                onClick={() => handleFieldClick('text')}
+              >
+                {todo.text}
+              </span>
+            )}
+            {isEditing.category ? (
+              <input
+                type="text"
+                value={editedTodo.category || ''}
+                onChange={(e) => handleChange('category', e.target.value)}
+                onBlur={() => handleBlur('category')}
+                autoFocus
+                className="flex h-7 w-24 rounded-md border border-input bg-transparent px-2 py-1 text-xs shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+              />
+            ) : (
+              <Badge
+                variant="secondary"
+                className="text-xs cursor-pointer"
+                onClick={() => handleFieldClick('category')}
+              >
+                {todo.category || '없음'}
+              </Badge>
+            )}
+            {isEditing.deadline ? (
+              <input
+                type="date"
+                value={todo.deadline ? new Date(todo.deadline).toISOString().substr(0, 10) : ''}
+                onChange={(e) => handleChange('deadline', e.target.value)}
+                onBlur={() => handleBlur('deadline')}
+                autoFocus
+                className=" flex h-7 w-30 rounded-md border border-input bg-transparent px-2 py-1 text-xs shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+              />
+            ) : (
+              todo.deadline && (
+                <Badge
+                  variant="outline"
+                  className="text-xs cursor-pointer"
+                  onClick={() => handleFieldClick('deadline')}
+                >
                   {new Date(todo.deadline).toLocaleDateString('ko-KR', {
                     month: 'short',
                     day: 'numeric',
                   })}
                 </Badge>
-              )}
-            </div>
+              )
+            )}
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          {todo.allottedTime && <span className="text-sm text-gray-500 tabular-nums">{todo.allottedTime}분</span>}
+          {isEditing.allottedTime ? (
+            <input
+              type="number"
+              step={10}
+              value={editedTodo.allottedTime || ''}
+              onChange={(e) => handleChange('allottedTime', Number(e.target.value))}
+              onBlur={() => handleBlur('allottedTime')}
+              autoFocus
+              className="flex h-7 w-14 rounded-md border border-input bg-transparent px-2 py-1 text-xs shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+            />
+          ) : (
+            <span
+              className="text-sm text-gray-500 tabular-nums cursor-pointer"
+              onClick={() => handleFieldClick('allottedTime')}
+            >
+              {formatTime(todo.allottedTime)}
+            </span>
+          )}
           <Button size="sm" variant="ghost" onClick={() => console.log('click')} className="shrink-0">
             <Play className="h-4 w-4" />
           </Button>
