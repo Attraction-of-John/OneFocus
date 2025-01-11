@@ -27,8 +27,10 @@ const Header: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    const currentRef = searchContainerRef.current;
+
     const handleClickOutside = (event: MouseEvent) => {
-      if (!searchContainerRef.current?.contains(event.target as Node)) {
+      if (currentRef && !currentRef.contains(event.target as Node)) {
         setIsSearchFocused(false);
       }
     };
@@ -45,7 +47,7 @@ const Header: React.FC = () => {
           <br />
           <span className="text-base text-gray-800">{currentDateTime.date}</span>
         </div>
-        <div ref={searchContainerRef} className="relative flex-1" onMouseDown={(e) => e.stopPropagation()}>
+        <div ref={searchContainerRef} className="relative flex-1">
           <SiGoogle className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
           <Input
             type="search"
@@ -67,10 +69,8 @@ const Header: React.FC = () => {
                   className={`flex items-center px-4 py-3 hover:bg-gray-100 cursor-pointer
                     ${index === selectedIndex ? 'bg-gray-100' : ''}
                   `}
-                  onClick={(e) => {
-                    e.stopPropagation();
+                  onClick={() => {
                     executeSearch(suggestion);
-                    setIsSearchFocused(false);
                   }}
                 >
                   <div className="flex items-center gap-4 flex-1">
