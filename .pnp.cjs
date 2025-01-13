@@ -2442,6 +2442,10 @@ const RAW_RUNTIME_STATE =
       "npm:3.3.5"\
     ],\
     [\
+      "kadvice",\
+      "npm:2.0.2"\
+    ],\
+    [\
       "keyv",\
       "npm:4.5.4"\
     ],\
@@ -3866,6 +3870,7 @@ const RAW_RUNTIME_STATE =
           ["eslint-plugin-react-refresh", "virtual:aed4bc720a27aac6e993057a2060f3bccac4322b77c82ced6d3a39c67458d718564baafd971bebd0aba6b28171d7af4d0f6ce8dd83da80c8ca1ca4b6b82b6754#npm:0.4.16"],\
           ["eslint-plugin-storybook", "virtual:aed4bc720a27aac6e993057a2060f3bccac4322b77c82ced6d3a39c67458d718564baafd971bebd0aba6b28171d7af4d0f6ce8dd83da80c8ca1ca4b6b82b6754#npm:0.11.2"],\
           ["globals", "npm:15.14.0"],\
+          ["kadvice", "npm:2.0.2"],\
           ["lucide-react", "virtual:aed4bc720a27aac6e993057a2060f3bccac4322b77c82ced6d3a39c67458d718564baafd971bebd0aba6b28171d7af4d0f6ce8dd83da80c8ca1ca4b6b82b6754#npm:0.469.0"],\
           ["postcss", "npm:8.4.49"],\
           ["prettier", "npm:3.4.2"],\
@@ -12972,6 +12977,15 @@ const RAW_RUNTIME_STATE =
         "linkType": "HARD"\
       }]\
     ]],\
+    ["kadvice", [\
+      ["npm:2.0.2", {\
+        "packageLocation": "./.yarn/cache/kadvice-npm-2.0.2-cfeb27d17a-4fbd9d7ee3.zip/node_modules/kadvice/",\
+        "packageDependencies": [\
+          ["kadvice", "npm:2.0.2"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
     ["keyv", [\
       ["npm:4.5.4", {\
         "packageLocation": "./.yarn/cache/keyv-npm-4.5.4-4c8e2cf7f7-aa52f3c5e1.zip/node_modules/keyv/",\
@@ -14035,6 +14049,7 @@ const RAW_RUNTIME_STATE =
           ["eslint-plugin-react-refresh", "virtual:aed4bc720a27aac6e993057a2060f3bccac4322b77c82ced6d3a39c67458d718564baafd971bebd0aba6b28171d7af4d0f6ce8dd83da80c8ca1ca4b6b82b6754#npm:0.4.16"],\
           ["eslint-plugin-storybook", "virtual:aed4bc720a27aac6e993057a2060f3bccac4322b77c82ced6d3a39c67458d718564baafd971bebd0aba6b28171d7af4d0f6ce8dd83da80c8ca1ca4b6b82b6754#npm:0.11.2"],\
           ["globals", "npm:15.14.0"],\
+          ["kadvice", "npm:2.0.2"],\
           ["lucide-react", "virtual:aed4bc720a27aac6e993057a2060f3bccac4322b77c82ced6d3a39c67458d718564baafd971bebd0aba6b28171d7af4d0f6ce8dd83da80c8ca1ca4b6b82b6754#npm:0.469.0"],\
           ["postcss", "npm:8.4.49"],\
           ["prettier", "npm:3.4.2"],\
