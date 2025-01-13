@@ -22,9 +22,10 @@ import FailDialog from './FailDialog';
 interface TodoDialogProps {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
+  disabled?: boolean;
 }
 
-const TodoDialog: React.FC<TodoDialogProps> = ({ isOpen, setIsOpen }) => {
+const TodoDialog: React.FC<TodoDialogProps> = ({ isOpen, setIsOpen, disabled }) => {
   const {
     register,
     handleSubmit,
@@ -74,8 +75,11 @@ const TodoDialog: React.FC<TodoDialogProps> = ({ isOpen, setIsOpen }) => {
   return (
     <div className="flex justify-end">
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogTrigger asChild>
-          <Badge className="flex items-center gap-2 text-sm font-semibold cursor-pointer transition-colors duration-200">
+        <DialogTrigger asChild disabled={disabled}>
+          <Badge
+            className={`flex items-center gap-2 text-sm font-semibold cursor-pointer transition-colors duration-200 my-1
+              ${disabled ? 'opacity-0 cursor-not-allowed pointer-events-none' : ''}`}
+          >
             <MdOutlineAddTask />
             Todo 추가
           </Badge>

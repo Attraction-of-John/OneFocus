@@ -77,6 +77,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         .then((response) => response.json())
         .then((data) => sendResponse({ suggestions: data[1] }))
         .catch((error) => sendResponse({ error: error.message }));
-      return true; // 비동기 응답을 위해 true 반환
+      return true;
   }
 });
