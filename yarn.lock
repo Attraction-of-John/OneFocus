@@ -7294,6 +7294,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"kadvice@npm:^2.0.2":
+  version: 2.0.2
+  resolution: "kadvice@npm:2.0.2"
+  checksum: 10c0/4fbd9d7ee31dd15f7e0e55ded6135b96d5d75dbae0d9766f823b699b10b3f2f80b2cbcf63ef724d614e2bf323a3688d64e9003967a9d328a2b0e9f1d23fe67cd
+  languageName: node
+  linkType: hard
+
 "keyv@npm:^4.5.3":
   version: 4.5.4
   resolution: "keyv@npm:4.5.4"
@@ -8245,6 +8252,7 @@ __metadata:
     eslint-plugin-react-refresh: "npm:^0.4.16"
     eslint-plugin-storybook: "npm:^0.11.1"
     globals: "npm:^15.13.0"
+    kadvice: "npm:^2.0.2"
     lucide-react: "npm:^0.469.0"
     postcss: "npm:^8.4.49"
     prettier: "npm:^3.2.5"
