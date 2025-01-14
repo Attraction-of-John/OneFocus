@@ -1,17 +1,19 @@
 import { useEffect } from 'react';
 import { Pause, Play, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { CardContent } from '@/components/ui/card';
 import { formatTimer } from '@/utils/timerUtils';
 import { useTimerStore } from '@/stores/useTimerStore';
 
 const TimerContent: React.FC = () => {
   const {
     currentTodo,
-    currentTime,
+    remainingTime,
     isRunning,
-    setCurrentTime,
+    endTime,
+    setRemainingTime,
     setIsRunning,
+
     setTimerStarted,
     setTimerMode,
     setCurrentTodo,
@@ -19,18 +21,24 @@ const TimerContent: React.FC = () => {
   } = useTimerStore();
 
   useEffect(() => {
-    setTimerStarted(true);
+    let intervalId: NodeJS.Timeout;
 
-    let interval: NodeJS.Timeout;
-    if (isRunning && currentTime > 0) {
-      interval = setInterval(() => {
-        setCurrentTime(currentTime - 1);
-      }, 1000);
-    } else if (currentTime === 0) {
-      setIsRunning(false);
+    if (isRunning && endTime) {
+      intervalId = setInterval(() => {
+        const now = Date.now();
+        const remaining = Math.ceil((endTime - now) / 1000);
+
+        if (remaining <= 0) {
+          setIsRunning(false);
+          setRemainingTime(0);
+        } else {
+          setRemainingTime(remaining);
+        }
+      }, 100);
     }
-    return () => clearInterval(interval);
-  }, [isRunning, currentTime, setCurrentTime, setIsRunning, setTimerStarted]);
+
+    return () => clearInterval(intervalId);
+  }, [isRunning, endTime, setRemainingTime, setIsRunning]);
 
   const handleStartPause = () => {
     if (!isRunning) {
@@ -47,17 +55,14 @@ const TimerContent: React.FC = () => {
 
   return (
     <>
-      <CardHeader>
-        <CardTitle>타이머</CardTitle>
-      </CardHeader>
       <CardContent className="flex flex-col items-center justify-center pt-4">
         {currentTodo && (
-          <div className="mb-6 text-center">
+          <div className="mb-6 text-center text-white">
             <h3 className="text-xl font-semibold">{currentTodo.text}</h3>
-            {currentTodo.category && <span className="text-sm text-gray-500 mt-1">{currentTodo.category}</span>}
+            {currentTodo.category && <span className="text-sm mt-1 text-gray-200">{currentTodo.category}</span>}
           </div>
         )}
-        <div className="relative w-48 h-48">
+        <div className="relative w-48 h-48 scale-110 transition-transform duration-700">
           <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
             <circle
               className="text-gray-200"
@@ -74,7 +79,7 @@ const TimerContent: React.FC = () => {
               strokeDasharray={283}
               strokeDashoffset={
                 283 -
-                (((currentTodo?.allottedTime || 60) * 60 - currentTime) / ((currentTodo?.allottedTime || 60) * 60)) *
+                (((currentTodo?.allottedTime || 60) * 60 - remainingTime) / ((currentTodo?.allottedTime || 60) * 60)) *
                   283
               }
               strokeLinecap="butt"
@@ -86,11 +91,15 @@ const TimerContent: React.FC = () => {
             />
           </svg>
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
-            <div className="text-4xl font-mono">{formatTimer(currentTime)}</div>
+            <div className="text-4xl font-mono text-white">{formatTimer(remainingTime)}</div>
           </div>
         </div>
         <div className="flex gap-2 mt-6">
-          <Button onClick={handleStartPause} variant="outline" className="w-32">
+          <Button
+            onClick={handleStartPause}
+            variant={'default'}
+            className="w-32 transition-all duration-300 bg-white text-black hover:bg-white/90"
+          >
             {isRunning ? (
               <>
                 <Pause className="h-4 w-4 mr-2" />
@@ -103,7 +112,7 @@ const TimerContent: React.FC = () => {
               </>
             )}
           </Button>
-          <Button onClick={handleCancel} variant="outline" className="w-32">
+          <Button onClick={handleCancel} variant="outline" className="w-32 border-white text-white hover:bg-white/20">
             <X className="h-4 w-4 mr-2" />
             타이머 취소
           </Button>
