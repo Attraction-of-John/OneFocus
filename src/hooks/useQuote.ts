@@ -1,24 +1,54 @@
-import { useState, useEffect } from 'react';
-import { getDailyQuote, Quote } from '@/utils/quoteUtils';
+import { useState, useEffect, useCallback } from 'react';
+import { kadvice, KadviceTagType } from 'kadvice';
 
-export const useQuote = (category: 1 | 2 | 3) => {
+interface Quote {
+  text: string;
+  author: string;
+  occupation: string;
+}
+
+const getQuoteData = (tag: KadviceTagType | undefined) => {
+  const dailyQuote = kadvice.getOneByDaily(tag);
+  return {
+    text: dailyQuote.message,
+    author: dailyQuote.author,
+    occupation: dailyQuote.authorProfile || 'Unknown',
+  };
+};
+
+export function useQuote(tag: KadviceTagType | undefined) {
   const [quote, setQuote] = useState<Quote | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
+  const fetchQuote = useCallback(() => {
+    try {
+      setIsLoading(true);
+      const quoteData = getQuoteData(tag);
+      setQuote(quoteData);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to fetch quote'));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [tag]);
+
   useEffect(() => {
-    const fetchQuote = async () => {
-      try {
-        const newQuote = await getDailyQuote(category);
-        setQuote(newQuote);
-      } catch (err) {
-        setError(err instanceof Error ? err : new Error('명언을 가져오는데 실패했습니다.'));
-      } finally {
-        setIsLoading(false);
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'count' || e.key === 'midNight') {
+        fetchQuote();
       }
     };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [fetchQuote]);
+
+  useEffect(() => {
     fetchQuote();
-  }, [category]);
+    const interval = setInterval(fetchQuote, 5000);
+    return () => clearInterval(interval);
+  }, [fetchQuote]);
 
   return { quote, isLoading, error };
-};
+}

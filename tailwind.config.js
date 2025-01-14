@@ -85,6 +85,14 @@ export default {
           from: { height: 'var(--radix-accordion-content-height)' },
           to: { height: '0' },
         },
+        slideUp: {
+          from: { transform: 'translateY(20px)', opacity: '1' },
+          to: { transform: 'translateY(0)', opacity: '1' },
+        },
+        slideDown: {
+          from: { transform: 'translateY(-20px)', opacity: '1' },
+          to: { transform: 'translateY(0)', opacity: '1' },
+        },
       },
       animation: {
         'fade-in-90': 'fade-in-90 0.3s ease-out',
@@ -93,13 +101,15 @@ export default {
         'slide-out-to-top-10': 'slide-out-to-top 0.3s ease-in',
         'slide-in-from-top-0': 'slide-in-from-top 0.3s ease-out',
         'slide-out-to-top-0': 'slide-out-to-top 0.3s ease-in',
-        'fade-in': 'fade-in 200ms ease-out',
+        'fade-in': 'fade-in 0.3s ease-out',
         'zoom-in': 'zoom-in 200ms ease-out',
         'zoom-out': 'zoom-out 200ms ease-in',
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
         'slide-in-from-top': 'slide-in-from-top 0.3s ease-out',
         'slide-out-to-top': 'slide-out-to-top 0.3s ease-out',
+        'slide-up': 'slideUp 0.3s ease-out forwards',
+        'slide-down': 'slideDown 0.3s ease-out forwards',
       },
     },
     fontFamily: {

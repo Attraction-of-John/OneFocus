@@ -9,6 +9,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { useState } from 'react';
 import type { UniqueIdentifier } from '@dnd-kit/core';
 import { formatTime } from '@/utils/todoUtils';
+import { useTimerStore } from '@/stores/useTimerStore';
 
 interface TodoListItemProps {
   todo: Todo;
@@ -16,6 +17,7 @@ interface TodoListItemProps {
 
 const TodoItem: React.FC<TodoListItemProps> = ({ todo }) => {
   const { updateTodoList, deleteTodoList } = useTodoStore();
+  const { setTimerMode, setCurrentTodo, setIsRunning } = useTimerStore();
   const [isEditing, setIsEditing] = useState({
     text: false,
     category: false,
@@ -50,6 +52,12 @@ const TodoItem: React.FC<TodoListItemProps> = ({ todo }) => {
 
   const handleBlur = (field: keyof typeof isEditing) => {
     setIsEditing((prev) => ({ ...prev, [field]: false }));
+  };
+
+  const handlePlayClick = () => {
+    setCurrentTodo(todo);
+    setTimerMode(true);
+    setIsRunning(true);
   };
 
   return (
@@ -153,7 +161,7 @@ const TodoItem: React.FC<TodoListItemProps> = ({ todo }) => {
               {formatTime(todo.allottedTime)}
             </span>
           )}
-          <Button size="sm" variant="ghost" onClick={() => console.log('click')} className="shrink-0">
+          <Button size="sm" variant="ghost" onClick={handlePlayClick} className="shrink-0">
             <Play className="h-4 w-4" />
           </Button>
           <Button

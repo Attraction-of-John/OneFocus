@@ -3,7 +3,7 @@
   "name": "OneFocus",
   "short_name": "OneFocus",
   "version": "1.0.0",
-  "description": "OneFocus presents a comprehensive solution to enhance productivity by integrating time management with task tracking and continuous motivation within a Chrome extension!",
+  "description": "OneFocus enhances productivity by integrating time management, task tracking, and continuous motivation in a Chrome extension.",
 
   "chrome_url_overrides": {
     "newtab": "index.html"

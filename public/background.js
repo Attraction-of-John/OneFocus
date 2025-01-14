@@ -1,10 +1,28 @@
 /* global chrome */
+import { startBadgeUpdate } from './utils/timerUtils.js';
 
-chrome.runtime.onInstalled.addListener(() => {
-  chrome.tabs.create({ url: chrome.runtime.getURL('index.html') });
+startBadgeUpdate();
+
+let badgeInterval;
+
+chrome.runtime.onStartup.addListener(() => {
+  if (badgeInterval) clearInterval(badgeInterval);
+  badgeInterval = startBadgeUpdate();
+});
+
+chrome.runtime.onInstalled.addListener((details) => {
+  if (badgeInterval) clearInterval(badgeInterval);
+  badgeInterval = startBadgeUpdate();
+
+  if (details.reason === 'install') {
+    chrome.tabs.create({ url: chrome.runtime.getURL('index.html') });
+  }
 });
 
 chrome.action.onClicked.addListener(() => {
+  if (badgeInterval) clearInterval(badgeInterval);
+  badgeInterval = startBadgeUpdate();
+
   chrome.tabs.create({ url: chrome.runtime.getURL('index.html') });
 });
 
@@ -77,6 +95,25 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         .then((response) => response.json())
         .then((data) => sendResponse({ suggestions: data[1] }))
         .catch((error) => sendResponse({ error: error.message }));
-      return true; // 비동기 응답을 위해 true 반환
+      return true;
+
+    case 'UPDATE_TIMER_STATE':
+      chrome.storage.sync.set(
+        {
+          timerState: {
+            ...message.timerState,
+            endTime: message.timerState.isRunning ? Date.now() + message.timerState.remainingTime * 1000 : null,
+          },
+        },
+        () => {
+          if (chrome.runtime.lastError) {
+            console.error('Failed to update timer state:', chrome.runtime.lastError);
+            sendResponse({ status: 'error' });
+          } else {
+            sendResponse({ status: 'success' });
+          }
+        },
+      );
+      break;
   }
 });

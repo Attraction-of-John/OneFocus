@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { IoSearch } from 'react-icons/io5';
 import { formatDateTime } from '@/utils/dateUtils';
 import { useSearch } from '@/hooks/useSearch';
+import { useTimerStore } from '@/stores/useTimerStore';
 
 const Header: React.FC = () => {
   const [currentDateTime, setCurrentDateTime] = useState(formatDateTime());
@@ -18,6 +19,7 @@ const Header: React.FC = () => {
     handleKeyDown,
     setIsSearchFocused,
   } = useSearch();
+  const { isTimerMode, isRunning } = useTimerStore();
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -43,11 +45,31 @@ const Header: React.FC = () => {
     <div className="flex flex-col items-center gap-4 mb-8 justify-between relative z-50">
       <div className="w-full bg-stone-100/50 backdrop-blur-lg rounded-3xl px-5 py-2 flex items-center">
         <div className="px-2">
-          <span className="text-lg text-black">{currentDateTime.time}</span>
+          <span
+            className={`
+            text-lg transition-colors duration-700
+            ${isTimerMode && isRunning ? 'text-white' : 'text-black'}
+          `}
+          >
+            {currentDateTime.time}
+          </span>
           <br />
-          <span className="text-base text-gray-800">{currentDateTime.date}</span>
+          <span
+            className={`
+            text-base transition-colors duration-700
+            ${isTimerMode && isRunning ? 'text-gray-200' : 'text-gray-800'}
+          `}
+          >
+            {currentDateTime.date}
+          </span>
         </div>
-        <div ref={searchContainerRef} className="relative flex-1">
+        <div
+          ref={searchContainerRef}
+          className={`
+          relative flex-1 transition-opacity duration-700
+          ${isTimerMode && isRunning ? 'opacity-50 pointer-events-none' : 'opacity-100'}
+        `}
+        >
           <SiGoogle className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
           <Input
             type="search"
