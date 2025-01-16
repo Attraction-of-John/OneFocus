@@ -18,31 +18,29 @@ export function updateBadgeText(remainingTime) {
 }
 
 export function startBadgeUpdate() {
-  chrome.storage.sync.get(['timerState'], (result) => {
-    if (result.timerState?.isRunning) {
-      const now = Date.now();
-      const endTime = result.timerState.endTime;
-      if (endTime && now < endTime) {
-        const remaining = Math.ceil((endTime - now) / 1000);
-        updateBadgeText(remaining);
-      }
-    }
-  });
+  if (!chrome.runtime?.id) {
+    console.warn('Extension context unavailable');
+    return;
+  }
 
-  return setInterval(() => {
-    chrome.storage.sync.get(['timerState'], (result) => {
-      if (result.timerState?.isRunning && result.timerState?.endTime) {
-        const now = Date.now();
-        const endTime = result.timerState.endTime;
-        if (now < endTime) {
-          const remaining = Math.ceil((endTime - now) / 1000);
-          updateBadgeText(remaining);
-        } else {
-          chrome.action.setBadgeText({ text: '' });
-        }
+  return new Promise((resolve) => {
+    chrome.storage.local.get(['timerState'], (result) => {
+      if (chrome.runtime.lastError) {
+        console.warn('Failed to load timer state:', chrome.runtime.lastError);
+        resolve(null);
+        return;
+      }
+
+      if (result.timerState) {
+        chrome.runtime.sendMessage({ type: 'TIMER_UPDATE', state: result.timerState }, (response) => {
+          if (chrome.runtime.lastError) {
+            console.warn('Failed to update timer:', chrome.runtime.lastError);
+          }
+          resolve(response);
+        });
       } else {
-        chrome.action.setBadgeText({ text: '' });
+        resolve(null);
       }
     });
-  }, 1000);
+  });
 }

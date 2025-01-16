@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import { Todo } from '@/types/todo.interface';
 import { subscribeWithSelector } from 'zustand/middleware';
 
+const timerChannel = new BroadcastChannel('timer_channel');
+
 interface TimerStore {
   isTimerMode: boolean;
   isTimerStarted: boolean;
@@ -10,6 +12,7 @@ interface TimerStore {
   isRunning: boolean;
   startTime: number | null;
   endTime: number | null;
+
   setTimerMode: (isTimerMode: boolean) => void;
   setTimerStarted: (isStarted: boolean) => void;
   setCurrentTodo: (todo: Todo | null) => void;
@@ -20,6 +23,24 @@ interface TimerStore {
   resetTimer: () => void;
 }
 
+const sendMessageToBackground = (state: any) => {
+  if (!chrome.runtime?.id) return;
+
+  return new Promise((resolve) => {
+    try {
+      chrome.runtime.sendMessage({ type: 'TIMER_UPDATE', state }, (response) => {
+        if (chrome.runtime.lastError) {
+          console.warn('Timer update failed:', chrome.runtime.lastError);
+        }
+        resolve(response);
+      });
+    } catch (error) {
+      console.warn('Failed to send message:', error);
+      resolve(null);
+    }
+  });
+};
+
 export const useTimerStore = create<TimerStore>()(
   subscribeWithSelector((set) => ({
     isTimerMode: false,
@@ -29,6 +50,7 @@ export const useTimerStore = create<TimerStore>()(
     isRunning: false,
     startTime: null,
     endTime: null,
+
     setTimerMode: (isTimerMode) => set({ isTimerMode }),
     setTimerStarted: (isTimerStarted) => set({ isTimerStarted }),
     setCurrentTodo: (todo) =>
@@ -40,44 +62,62 @@ export const useTimerStore = create<TimerStore>()(
     setIsRunning: (isRunning) =>
       set((state) => {
         const now = Date.now();
-        if (isRunning) {
-          return {
-            isRunning,
-            startTime: now,
-            endTime: now + state.remainingTime * 1000,
-            remainingTime: state.remainingTime,
-          };
-        }
-        if (state.endTime) {
-          return {
-            isRunning,
-            startTime: null,
-            endTime: null,
-            remainingTime: Math.ceil((state.endTime - now) / 1000),
-          };
-        }
-        return { isRunning };
+        const newState = isRunning
+          ? {
+              isRunning,
+              startTime: now,
+              endTime: now + state.remainingTime * 1000,
+              remainingTime: state.remainingTime,
+            }
+          : state.endTime
+            ? {
+                isRunning,
+                startTime: null,
+                endTime: null,
+                remainingTime: Math.ceil((state.endTime - now) / 1000),
+              }
+            : { isRunning };
+
+        setTimeout(() => {
+          sendMessageToBackground(newState);
+          timerChannel.postMessage({ type: 'TIMER_UPDATE', state: newState });
+        }, 0);
+
+        return newState;
       }),
     setStartTime: (startTime) => set({ startTime }),
     setEndTime: (endTime) => set({ endTime }),
     resetTimer: () =>
-      set({
-        remainingTime: 0,
-        isRunning: false,
-        isTimerStarted: false,
-        startTime: null,
-        endTime: null,
+      set(() => {
+        const newState = {
+          remainingTime: 0,
+          isRunning: false,
+          isTimerStarted: false,
+          startTime: null,
+          endTime: null,
+          currentTodo: null,
+        };
+
+        setTimeout(() => {
+          sendMessageToBackground(newState);
+          timerChannel.postMessage({ type: 'TIMER_UPDATE', state: newState });
+        }, 0);
+
+        return newState;
       }),
   })),
 );
 
-if (typeof chrome !== 'undefined' && chrome.storage?.sync) {
+timerChannel.onmessage = (event) => {
+  if (event.data.type === 'TIMER_UPDATE') {
+    useTimerStore.setState(event.data.state);
+  }
+};
+
+if (typeof chrome !== 'undefined' && chrome.storage?.local && chrome.runtime?.id) {
   const loadTimerState = async () => {
     try {
-      const result = await new Promise<{ timerState: TimerStore }>((resolve) => {
-        chrome.storage.sync.get(['timerState'], (result) => resolve(result as { timerState: TimerStore }));
-      });
-
+      const result = await chrome.storage.local.get(['timerState']);
       if (result.timerState) {
         const { endTime, isRunning } = result.timerState;
 
@@ -107,10 +147,3 @@ if (typeof chrome !== 'undefined' && chrome.storage?.sync) {
 
   loadTimerState();
 }
-
-useTimerStore.subscribe(
-  (state) => state,
-  (timerState) => {
-    chrome.storage.sync.set({ timerState });
-  },
-);
