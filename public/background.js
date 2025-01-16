@@ -1,5 +1,49 @@
 /* global chrome */
-import { startBadgeUpdate } from './utils/timerUtils.js';
+import { startBadgeUpdate, updateBadgeText } from './utils/timerUtils.js';
+
+let timerState = null;
+let timerInterval = null;
+let storageUpdateInterval = null;
+
+function saveToStorage() {
+  if (timerState) {
+    chrome.storage.local.set({ timerState });
+  }
+}
+
+function updateTimer() {
+  if (timerState?.isRunning && timerState?.endTime) {
+    const now = Date.now();
+    if (now < timerState.endTime) {
+      timerState.remainingTime = Math.ceil((timerState.endTime - now) / 1000);
+      updateBadgeText(timerState.remainingTime);
+    } else {
+      clearTimerState();
+    }
+  }
+}
+
+function clearTimerState() {
+  timerState = {
+    isRunning: false,
+    remainingTime: 0,
+    startTime: null,
+    endTime: null,
+  };
+
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+
+  if (storageUpdateInterval) {
+    clearInterval(storageUpdateInterval);
+    storageUpdateInterval = null;
+  }
+
+  chrome.action.setBadgeText({ text: '' });
+  saveToStorage();
+}
 
 startBadgeUpdate();
 
@@ -27,6 +71,23 @@ chrome.action.onClicked.addListener(() => {
 });
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === 'TIMER_UPDATE') {
+    timerState = message.state;
+
+    if (timerInterval) clearInterval(timerInterval);
+    if (storageUpdateInterval) clearInterval(storageUpdateInterval);
+
+    if (timerState.isRunning) {
+      timerInterval = setInterval(updateTimer, 100);
+      storageUpdateInterval = setInterval(saveToStorage, 10000);
+      updateTimer();
+    } else {
+      clearTimerState();
+    }
+
+    sendResponse({ status: 'success' });
+    return true;
+  }
   switch (message.type) {
     case 'ADD_TODO':
       chrome.storage.local.get(['todoList'], (result) => {
@@ -96,24 +157,5 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         .then((data) => sendResponse({ suggestions: data[1] }))
         .catch((error) => sendResponse({ error: error.message }));
       return true;
-
-    case 'UPDATE_TIMER_STATE':
-      chrome.storage.sync.set(
-        {
-          timerState: {
-            ...message.timerState,
-            endTime: message.timerState.isRunning ? Date.now() + message.timerState.remainingTime * 1000 : null,
-          },
-        },
-        () => {
-          if (chrome.runtime.lastError) {
-            console.error('Failed to update timer state:', chrome.runtime.lastError);
-            sendResponse({ status: 'error' });
-          } else {
-            sendResponse({ status: 'success' });
-          }
-        },
-      );
-      break;
   }
 });

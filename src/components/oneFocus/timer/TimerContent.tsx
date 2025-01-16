@@ -1,9 +1,10 @@
-import { useEffect } from 'react';
 import { Pause, Play, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CardContent } from '@/components/ui/card';
+
 import { formatTimer } from '@/utils/timerUtils';
 import { useTimerStore } from '@/stores/useTimerStore';
+import { useEffect } from 'react';
 
 const TimerContent: React.FC = () => {
   const {
@@ -11,20 +12,30 @@ const TimerContent: React.FC = () => {
     remainingTime,
     isRunning,
     endTime,
-    setRemainingTime,
     setIsRunning,
-
-    setTimerStarted,
     setTimerMode,
     setCurrentTodo,
     resetTimer,
+    setRemainingTime,
   } = useTimerStore();
+
+  useEffect(() => {
+    if (isRunning) {
+      const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+        e.preventDefault();
+        return;
+      };
+
+      window.addEventListener('beforeunload', handleBeforeUnload);
+      return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }
+  }, [isRunning]);
 
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
 
     if (isRunning && endTime) {
-      intervalId = setInterval(() => {
+      const updateTimer = () => {
         const now = Date.now();
         const remaining = Math.ceil((endTime - now) / 1000);
 
@@ -34,16 +45,16 @@ const TimerContent: React.FC = () => {
         } else {
           setRemainingTime(remaining);
         }
-      }, 100);
+      };
+
+      intervalId = setInterval(updateTimer, 100);
+      updateTimer();
     }
 
     return () => clearInterval(intervalId);
-  }, [isRunning, endTime, setRemainingTime, setIsRunning]);
+  }, [isRunning, endTime, setIsRunning, setRemainingTime]);
 
   const handleStartPause = () => {
-    if (!isRunning) {
-      setTimerStarted(true);
-    }
     setIsRunning(!isRunning);
   };
 
