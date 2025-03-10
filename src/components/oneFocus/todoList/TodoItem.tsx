@@ -161,7 +161,7 @@ const TodoItem: React.FC<TodoListItemProps> = ({ todo }) => {
               {formatTime(todo.allottedTime)}
             </span>
           )}
-          {todo.completed && (
+          {!todo.completed && (
             <Button size="sm" variant="ghost" onClick={handlePlayClick} className="shrink-0">
               <Play className="h-4 w-4" />
             </Button>
