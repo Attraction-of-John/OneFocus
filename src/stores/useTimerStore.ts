@@ -4,6 +4,13 @@ import { subscribeWithSelector } from 'zustand/middleware';
 
 const timerChannel = new BroadcastChannel('timer_channel');
 
+interface TimerMeasurements {
+  totalTimers: number;
+  completedTimers: number;
+  totalTimeSpent: number;
+  dailyStats: Record<string, { timers: number; timeSpent: number }>;
+}
+
 interface TimerStore {
   isTimerMode: boolean;
   isTimerStarted: boolean;
@@ -12,6 +19,7 @@ interface TimerStore {
   isRunning: boolean;
   startTime: number | null;
   endTime: number | null;
+  measurements: TimerMeasurements | null;
 
   setTimerMode: (isTimerMode: boolean) => void;
   setTimerStarted: (isStarted: boolean) => void;
@@ -21,6 +29,8 @@ interface TimerStore {
   setStartTime: (time: number | null) => void;
   setEndTime: (time: number | null) => void;
   resetTimer: () => void;
+  fetchMeasurements: () => Promise<TimerMeasurements | null>;
+  resetMeasurements: () => Promise<void>;
 }
 
 const sendMessageToBackground = (state: any) => {
@@ -50,6 +60,7 @@ export const useTimerStore = create<TimerStore>()(
     isRunning: false,
     startTime: null,
     endTime: null,
+    measurements: null,
 
     setTimerMode: (isTimerMode) => set({ isTimerMode }),
     setTimerStarted: (isTimerStarted) => set({ isTimerStarted }),
@@ -105,6 +116,47 @@ export const useTimerStore = create<TimerStore>()(
 
         return newState;
       }),
+
+    fetchMeasurements: async () => {
+      if (!chrome.runtime?.id) return null;
+
+      return new Promise<TimerMeasurements | null>((resolve) => {
+        try {
+          chrome.runtime.sendMessage({ type: 'GET_TIMER_MEASUREMENTS' }, (response) => {
+            if (chrome.runtime.lastError) {
+              console.warn('Failed to get measurements:', chrome.runtime.lastError);
+              resolve(null);
+            } else {
+              set({ measurements: response.measurements });
+              resolve(response.measurements);
+            }
+          });
+        } catch (error) {
+          console.warn('Failed to fetch measurements:', error);
+          resolve(null);
+        }
+      });
+    },
+
+    resetMeasurements: async () => {
+      if (!chrome.runtime?.id) return;
+
+      return new Promise<void>((resolve) => {
+        try {
+          chrome.runtime.sendMessage({ type: 'RESET_TIMER_MEASUREMENTS' }, () => {
+            if (chrome.runtime.lastError) {
+              console.warn('Failed to reset measurements:', chrome.runtime.lastError);
+            } else {
+              set({ measurements: null });
+            }
+            resolve();
+          });
+        } catch (error) {
+          console.warn('Failed to reset measurements:', error);
+          resolve();
+        }
+      });
+    },
   })),
 );
 
@@ -117,7 +169,9 @@ timerChannel.onmessage = (event) => {
 if (typeof chrome !== 'undefined' && chrome.storage?.local && chrome.runtime?.id) {
   const loadTimerState = async () => {
     try {
-      const result = await chrome.storage.local.get(['timerState']);
+      const result = await chrome.storage.local.get(['timerState', 'timerMeasurements']);
+
+      // Load timer state
       if (result.timerState) {
         const { endTime, isRunning } = result.timerState;
 
@@ -139,6 +193,11 @@ if (typeof chrome !== 'undefined' && chrome.storage?.local && chrome.runtime?.id
         } else {
           useTimerStore.setState(result.timerState);
         }
+      }
+
+      // Load measurements
+      if (result.timerMeasurements) {
+        useTimerStore.setState({ measurements: result.timerMeasurements });
       }
     } catch (error) {
       console.error('Timer state load error:', error);

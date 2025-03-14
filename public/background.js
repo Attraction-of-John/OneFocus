@@ -5,10 +5,33 @@ let timerState = null;
 let timerInterval = null;
 let storageUpdateInterval = null;
 
+// Add timer measurements object
+let timerMeasurements = {
+  totalTimers: 0,
+  completedTimers: 0,
+  totalTimeSpent: 0, // in seconds
+  dailyStats: {},
+};
+
+function loadMeasurements() {
+  chrome.storage.local.get(['timerMeasurements'], (result) => {
+    if (result.timerMeasurements) {
+      timerMeasurements = result.timerMeasurements;
+    }
+  });
+}
+
+// Load measurements when script starts
+loadMeasurements();
+
 function saveToStorage() {
   if (timerState) {
     chrome.storage.local.set({ timerState });
   }
+}
+
+function saveMeasurements() {
+  chrome.storage.local.set({ timerMeasurements });
 }
 
 function updateTimer() {
@@ -18,9 +41,38 @@ function updateTimer() {
       timerState.remainingTime = Math.ceil((timerState.endTime - now) / 1000);
       updateBadgeText(timerState.remainingTime);
     } else {
+      // Timer completed - update measurements
+      recordCompletedTimer(timerState);
       clearTimerState();
     }
   }
+}
+
+function recordCompletedTimer(state) {
+  if (!state || !state.startTime) return;
+
+  // Calculate time spent in seconds
+  const timeSpent = Math.round((Date.now() - state.startTime) / 1000);
+
+  // Update total stats
+  timerMeasurements.totalTimers++;
+  timerMeasurements.completedTimers++;
+  timerMeasurements.totalTimeSpent += timeSpent;
+
+  // Update daily stats
+  const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+  if (!timerMeasurements.dailyStats[today]) {
+    timerMeasurements.dailyStats[today] = {
+      timers: 0,
+      timeSpent: 0,
+    };
+  }
+
+  timerMeasurements.dailyStats[today].timers++;
+  timerMeasurements.dailyStats[today].timeSpent += timeSpent;
+
+  // Save updated measurements
+  saveMeasurements();
 }
 
 function clearTimerState() {
@@ -72,10 +124,16 @@ chrome.action.onClicked.addListener(() => {
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'TIMER_UPDATE') {
+    const prevState = timerState;
     timerState = message.state;
 
     if (timerInterval) clearInterval(timerInterval);
     if (storageUpdateInterval) clearInterval(storageUpdateInterval);
+
+    // Record completed timer if it was running and now it's not
+    if (prevState?.isRunning && !timerState.isRunning && prevState.startTime) {
+      recordCompletedTimer(prevState);
+    }
 
     if (timerState.isRunning) {
       timerInterval = setInterval(updateTimer, 100);
@@ -88,6 +146,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     sendResponse({ status: 'success' });
     return true;
   }
+
+  if (message.type === 'GET_TIMER_MEASUREMENTS') {
+    sendResponse({ measurements: timerMeasurements });
+    return true;
+  }
+
   switch (message.type) {
     case 'ADD_TODO':
       chrome.storage.local.get(['todoList'], (result) => {
@@ -157,5 +221,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         .then((data) => sendResponse({ suggestions: data[1] }))
         .catch((error) => sendResponse({ error: error.message }));
       return true;
+
+    case 'RESET_TIMER_MEASUREMENTS':
+      timerMeasurements = {
+        totalTimers: 0,
+        completedTimers: 0,
+        totalTimeSpent: 0,
+        dailyStats: {},
+      };
+      saveMeasurements();
+      sendResponse({ status: 'success' });
+      break;
   }
 });
