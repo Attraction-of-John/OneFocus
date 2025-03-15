@@ -1,6 +1,9 @@
 import { create } from 'zustand';
 import { Todo } from '@/types/todo.interface';
 import { subscribeWithSelector } from 'zustand/middleware';
+import { saveToStorage, loadFromStorage } from '@/utils/storageUtils';
+
+const TODO_STORAGE_KEY = 'todoList';
 
 interface TodoState {
   todoList: Todo[];
@@ -18,53 +21,35 @@ export const useTodoStore = create<TodoState>()(
       const newTodo = { ...todo, order: maxOrder + 1 };
       const updatedList = [...get().todoList, newTodo];
       set({ todoList: updatedList });
-      chrome.runtime.sendMessage({ type: 'ADD_TODO', todo: newTodo });
     },
     updateTodoList: (id, updates) => {
       const updatedList = get().todoList.map((todo) => (todo.id === id ? { ...todo, ...updates } : todo));
       set({ todoList: updatedList });
-      const updatedTodo = updatedList.find((todo) => todo.id === id);
-      if (updatedTodo) {
-        chrome.runtime.sendMessage({ type: 'UPDATE_TODO', todo: updatedTodo });
-      }
     },
     deleteTodoList: (id) => {
       const updatedList = get().todoList.filter((todo) => todo.id !== id);
       set({ todoList: updatedList });
-      chrome.runtime.sendMessage({ type: 'DELETE_TODO', id });
     },
     setTodoList: (todoList) => {
       set({ todoList });
-      chrome.runtime.sendMessage({ type: 'SET_TODO_LIST', todoList });
     },
   })),
 );
 
-if (typeof chrome !== 'undefined' && chrome.storage?.local) {
-  const loadTodoList = async () => {
-    try {
-      const result = await new Promise<{ todoList: Todo[] }>((resolve, reject) => {
-        chrome.storage.local.get(['todoList'], (result) => {
-          if (chrome.runtime.lastError) {
-            reject(chrome.runtime.lastError);
-          } else {
-            resolve(result as { todoList: Todo[] });
-          }
-        });
-      });
-      useTodoStore.getState().setTodoList(result.todoList || []);
-    } catch (error) {
-      console.error('Storage get error:', error);
-    }
-  };
+// todo 목록 로딩 함수
+const loadTodoList = () => {
+  const todoList = loadFromStorage<Todo[]>(TODO_STORAGE_KEY, []);
+  useTodoStore.getState().setTodoList(todoList);
+};
 
-  loadTodoList();
-}
-
+// todoList 상태가 변경될 때마다 로컬 스토리지에 저장
+// subscribe 자체는 상태 구독 함수이며, 여기서 콜백으로 saveToStorage를 호출하고 있음
 useTodoStore.subscribe(
-  (state) => state.todoList,
+  (state) => state.todoList, // 구독할 상태 선택자(selector)
   (todoList) => {
-    chrome.runtime.sendMessage({ type: 'UPDATE_TODO_LIST', todoList });
+    // 상태가 변경될 때 실행할 콜백 함수
+    saveToStorage(TODO_STORAGE_KEY, todoList); // 실제 로컬 스토리지 저장 로직
   },
-  { equalityFn: (a, b) => JSON.stringify(a) === JSON.stringify(b) },
 );
+
+loadTodoList();
