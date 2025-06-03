@@ -11,6 +11,7 @@ const TAB_CLOSE_DELAY_MS = 100; // 새 탭 닫기 지연 시간
 let timerState = null;
 let timerInterval = null;
 let storageUpdateInterval = null;
+let timerCheckInterval = null;
 
 /**
  * 타이머 상태를 chrome.storage.local에 저장
@@ -50,8 +51,71 @@ function updateTimer() {
     } else {
       // 타이머가 완료된 경우
       saveTimerMeasurement(timerState);
+
+      // 완료 알림 및 페이지 이동 처리
+      handleTimerCompletion();
+
       clearTimerState();
     }
+  }
+}
+
+/**
+ * 타이머 완료 시 처리
+ */
+async function handleTimerCompletion() {
+  const extensionUrl = chrome.runtime.getURL('index.html');
+
+  try {
+    // 현재 활성탭 확인
+    const activeTabs = await chrome.tabs.query({ active: true });
+    let activeOnFocusTab = null;
+
+    // 현재 OneFocus 탭이 활성화되어 있는지 확인
+    for (const tab of activeTabs) {
+      if (tab.url && tab.url.startsWith(extensionUrl)) {
+        activeOnFocusTab = tab;
+        break;
+      }
+    }
+
+    if (!activeOnFocusTab) {
+      // OneFocus가 포커스되지 않은 경우 알림 표시
+      chrome.notifications.create('timerCompleted', {
+        type: 'basic',
+        iconUrl: 'extension-icons/icon128.png',
+        title: '타이머 완료!',
+        message: timerState.currentTodo
+          ? `${timerState.currentTodo.text} 작업이 완료되었습니다`
+          : '타이머가 완료되었습니다',
+        buttons: [{ title: '확인하기' }],
+        priority: 2,
+      });
+
+      // 새 OneFocus 탭 열기 또는 기존 탭 찾아서 활성화
+      chrome.tabs.query({ url: `${extensionUrl}*` }, (tabs) => {
+        if (tabs.length > 0) {
+          // 기존 OneFocus 탭 활성화
+          chrome.tabs.update(tabs[0].id, {
+            active: true,
+            url: `${extensionUrl}#/timer-completed`,
+          });
+          chrome.windows.update(tabs[0].windowId, { focused: true });
+        } else {
+          // 새 OneFocus 탭 열기
+          chrome.tabs.create({
+            url: `${extensionUrl}#/timer-completed`,
+          });
+        }
+      });
+    } else {
+      // OneFocus가 이미 포커스된 경우 직접 완료 페이지로 이동
+      chrome.tabs.update(activeOnFocusTab.id, {
+        url: `${extensionUrl}#/timer-completed`,
+      });
+    }
+  } catch (error) {
+    console.error('타이머 완료 처리 중 오류:', error);
   }
 }
 
@@ -483,3 +547,184 @@ async function initializeFromStorage() {
 
 // 초기화 실행
 initializeFromStorage();
+
+// 타이머 상태 감시 및 완료 알림 처리
+function setupTimerTracking() {
+  // 이전에 설정된 인터벌 제거
+  if (timerCheckInterval) {
+    clearInterval(timerCheckInterval);
+  }
+
+  // 5초마다 타이머 상태 확인
+  timerCheckInterval = setInterval(async () => {
+    try {
+      // 현재 타이머 상태 가져오기
+      const timerState = await new Promise((resolve) => {
+        chrome.storage.local.get([TIMER_STATE_KEY], (result) => {
+          resolve(result[TIMER_STATE_KEY] || null);
+        });
+      });
+
+      if (timerState && timerState.isRunning && timerState.endTime) {
+        const now = Date.now();
+
+        // 타이머 완료 여부 확인
+        if (now >= timerState.endTime) {
+          console.log('타이머가 완료되었습니다.');
+
+          // 남은 시간을 0으로 업데이트
+          const updatedState = {
+            ...timerState,
+            isRunning: false,
+            remainingTime: 0,
+          };
+
+          // 스토리지 상태 업데이트
+          chrome.storage.local.set({ [TIMER_STATE_KEY]: updatedState });
+
+          // 현재 활성탭 확인
+          const activeTabs = await chrome.tabs.query({ active: true });
+          const extensionUrl = chrome.runtime.getURL('index.html');
+          let activeOnFocusTab = null;
+
+          // 현재 OneFocus 탭이 활성화되어 있는지 확인
+          for (const tab of activeTabs) {
+            if (tab.url && tab.url.startsWith(extensionUrl)) {
+              activeOnFocusTab = tab;
+              break;
+            }
+          }
+
+          if (!activeOnFocusTab) {
+            // OneFocus가 포커스되지 않은 경우 알림 표시
+            chrome.notifications.create('timerCompleted', {
+              type: 'basic',
+              iconUrl: 'extension-icons/icon128.png',
+              title: '타이머 완료!',
+              message: timerState.currentTodo
+                ? `${timerState.currentTodo.text} 작업이 완료되었습니다`
+                : '타이머가 완료되었습니다',
+              buttons: [{ title: '확인하기' }],
+              priority: 2,
+            });
+
+            // 새 OneFocus 탭 열기 또는 기존 탭 찾아서 활성화
+            chrome.tabs.query({ url: `${extensionUrl}*` }, (tabs) => {
+              if (tabs.length > 0) {
+                // 기존 OneFocus 탭 활성화
+                chrome.tabs.update(tabs[0].id, {
+                  active: true,
+                  url: `${extensionUrl}#/timer-completed`,
+                });
+              } else {
+                // 새 OneFocus 탭 열기
+                chrome.tabs.create({
+                  url: `${extensionUrl}#/timer-completed`,
+                });
+              }
+            });
+          } else {
+            // OneFocus가 이미 포커스된 경우 직접 완료 페이지로 이동
+            chrome.tabs.update(activeOnFocusTab.id, {
+              url: `${extensionUrl}#/timer-completed`,
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.error('타이머 상태 확인 중 에러:', error);
+    }
+  }, 5000); // 5초마다 확인
+}
+
+// 확장 프로그램 설치/업데이트 시 초기화
+chrome.runtime.onInstalled.addListener(() => {
+  setupTimerTracking();
+});
+
+// 브라우저 시작 시 초기화
+chrome.runtime.onStartup.addListener(() => {
+  setupTimerTracking();
+});
+
+// 알림 클릭 이벤트 처리
+chrome.notifications.onClicked.addListener((notificationId) => {
+  if (notificationId === 'timerCompleted') {
+    // 알림 제거
+    chrome.notifications.clear(notificationId);
+
+    // OneFocus 탭 열기 또는 기존 탭 활성화
+    const extensionUrl = chrome.runtime.getURL('index.html');
+    chrome.tabs.query({ url: `${extensionUrl}*` }, (tabs) => {
+      if (tabs.length > 0) {
+        // 기존 OneFocus 탭 활성화
+        chrome.tabs.update(tabs[0].id, {
+          active: true,
+          url: `${extensionUrl}#/timer-completed`,
+        });
+        chrome.windows.update(tabs[0].windowId, { focused: true });
+      } else {
+        // 새 OneFocus 탭 열기
+        chrome.tabs.create({
+          url: `${extensionUrl}#/timer-completed`,
+        });
+      }
+    });
+  }
+});
+
+// 알림 버튼 클릭 이벤트 처리
+chrome.notifications.onButtonClicked.addListener((notificationId, buttonIndex) => {
+  if (notificationId === 'timerCompleted' && buttonIndex === 0) {
+    // 확인하기 버튼 클릭 시
+    chrome.notifications.clear(notificationId);
+
+    const extensionUrl = chrome.runtime.getURL('index.html');
+    chrome.tabs.query({ url: `${extensionUrl}*` }, (tabs) => {
+      if (tabs.length > 0) {
+        chrome.tabs.update(tabs[0].id, {
+          active: true,
+          url: `${extensionUrl}#/timer-completed`,
+        });
+        chrome.windows.update(tabs[0].windowId, { focused: true });
+      } else {
+        chrome.tabs.create({
+          url: `${extensionUrl}#/timer-completed`,
+        });
+      }
+    });
+  }
+});
+
+// 메시지 처리
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === 'TIMER_UPDATE') {
+    // 타이머 상태 업데이트 처리
+    console.log('타이머 상태 업데이트:', message.state);
+
+    // 상태가 변경될 때 탭에 메시지 전송
+    chrome.tabs.query({}, (tabs) => {
+      tabs.forEach((tab) => {
+        try {
+          chrome.tabs
+            .sendMessage(tab.id, {
+              type: 'TIMER_UPDATE',
+              state: message.state,
+            })
+            .catch(() => {
+              // 일부 탭은 메시지를 받을 수 없을 수 있음 (오류 무시)
+            });
+        } catch (error) {
+          // 탭이 메시지를 처리할 수 없는 경우 무시
+          console.error('메시지 전송 오류:', error);
+        }
+      });
+    });
+  } else if (message.type === 'GET_TIMER_STATE') {
+    // 타이머 상태 요청 처리
+    chrome.storage.local.get([TIMER_STATE_KEY], (result) => {
+      sendResponse({ state: result[TIMER_STATE_KEY] || null });
+    });
+    return true; // 비동기 응답을 위해 true 반환
+  }
+});
