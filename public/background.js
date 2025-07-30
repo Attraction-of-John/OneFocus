@@ -92,7 +92,7 @@ async function handleTimerCompletion() {
         priority: 2,
       });
 
-      // 새 OneFocus 탭 열기 또는 기존 탭 찾아서 활성화
+      // 기존 OneFocus 탭이 있으면 해당 탭을 활성화, 없으면 새 탭 열기
       chrome.tabs.query({ url: `${extensionUrl}*` }, (tabs) => {
         if (tabs.length > 0) {
           // 기존 OneFocus 탭 활성화
@@ -222,21 +222,47 @@ chrome.runtime.onInstalled.addListener((details) => {
 });
 
 // 확장 프로그램 아이콘 클릭 처리
-chrome.action.onClicked.addListener(() => {
+chrome.action.onClicked.addListener(async () => {
   if (badgeInterval) clearInterval(badgeInterval);
   badgeInterval = startBadgeUpdate();
 
-  // 앱 페이지 열기
-  chrome.tabs.create({ url: chrome.runtime.getURL('index.html') });
+  // 타이머 상태 확인
+  const state = await getFromStorage(TIMER_STATE_KEY);
+
+  if (state?.isRunning) {
+    // 타이머가 진행 중이면 팝업 열기
+    chrome.windows.create({
+      url: chrome.runtime.getURL('popup.html'),
+      type: 'popup',
+      width: 400,
+      height: 400,
+    });
+  } else {
+    // 타이머가 진행 중이 아니면 새탭 열기
+    chrome.tabs.create({ url: chrome.runtime.getURL('index.html') });
+  }
 });
 
 // 탭 생성 시 타이머 상태 확인 및 제한 처리 - 개선된 버전
 chrome.tabs.onCreated.addListener(async (tab) => {
-  console.log('새 탭 생성됨:', tab.id);
+  // console.log('새 탭 생성됨:', tab.id);
+
+  // 팝업 창에서 생성된 탭은 제한하지 않음
+  if (tab.windowId) {
+    try {
+      const window = await chrome.windows.get(tab.windowId);
+      if (window.type === 'popup') {
+        // console.log('팝업 창에서 생성된 탭이므로 제한하지 않음:', tab.id);
+        return;
+      }
+    } catch (error) {
+      console.error('창 정보 확인 중 오류:', error);
+    }
+  }
 
   // 메모리에 있는 타이머 상태 확인 (즉시)
   if (timerState?.isRunning) {
-    console.log('메모리에서 실행 중인 타이머 상태 확인됨');
+    // console.log('메모리에서 실행 중인 타이머 상태 확인됨');
     await handleNewTabWithActiveTimer(tab);
     return;
   }
@@ -244,10 +270,10 @@ chrome.tabs.onCreated.addListener(async (tab) => {
   // 저장소에서 타이머 상태 확인 (백업)
   try {
     const state = await getFromStorage(TIMER_STATE_KEY);
-    console.log('저장소에서 타이머 상태 확인:', state);
+    // console.log('저장소에서 타이머 상태 확인:', state);
 
     if (state?.isRunning) {
-      console.log('저장소에서 실행 중인 타이머 상태 확인됨');
+      // console.log('저장소에서 실행 중인 타이머 상태 확인됨');
       // 메모리에 캐시 업데이트
       timerState = state;
       await handleNewTabWithActiveTimer(tab);
@@ -262,7 +288,7 @@ chrome.tabs.onCreated.addListener(async (tab) => {
  */
 async function handleNewTabWithActiveTimer(tab) {
   try {
-    console.log('타이머 실행 중 - 새 탭 제한 처리 시작');
+    // console.log('타이머 실행 중 - 새 탭 제한 처리 시작');
 
     // 알림 표시
     chrome.notifications.create(
@@ -283,7 +309,7 @@ async function handleNewTabWithActiveTimer(tab) {
     // 앱 탭이 이미 열려있으면 그 탭을 활성화
     const appUrl = chrome.runtime.getURL('index.html');
     const existingTabs = await chrome.tabs.query({ url: appUrl });
-    console.log('기존 앱 탭:', existingTabs.length);
+    // console.log('기존 앱 탭:', existingTabs.length);
 
     if (existingTabs.length > 0) {
       try {
