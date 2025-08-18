@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OneFocus 진행상황</title>
+    <!-- Vite 빌드 산출물: Tailwind CSS (assetsDir: assets, assetFileNames: [name].[ext]) -->
+    <!-- 실제 빌드 산출물명에 맞춤 -->
+    <link rel="stylesheet" href="timerUtils.css" />
+    <style>
+      body {
+        margin: 0;
+        padding: 8px;
+        box-sizing: border-box;
+        width: 336px;
+        height: 416px;
+        min-width: 336px;
+        min-height: 416px;
+        background: transparent;
+      }
+      #popup-root {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="popup-root"></div>
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

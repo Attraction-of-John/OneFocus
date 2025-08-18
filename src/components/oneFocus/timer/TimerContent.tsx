@@ -1,12 +1,14 @@
 import { Pause, Play, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CardContent } from '@/components/ui/card';
+import { useNavigate } from 'react-router-dom';
 
 import { formatTimer } from '@/utils/timerUtils';
 import { useTimerStore } from '@/stores/useTimerStore';
 import { useEffect } from 'react';
 
 const TimerContent: React.FC = () => {
+  const navigate = useNavigate();
   const {
     currentTodo,
     remainingTime,
@@ -42,6 +44,21 @@ const TimerContent: React.FC = () => {
         if (remaining <= 0) {
           setIsRunning(false);
           setRemainingTime(0);
+
+          // Chrome 확장 프로그램 환경에서 백그라운드에 타이머 완료 알림
+          if (typeof chrome !== 'undefined' && chrome.runtime?.id) {
+            chrome.runtime
+              .sendMessage({
+                type: 'TIMER_COMPLETED',
+                state: { isRunning: false, remainingTime: 0 },
+              })
+              .catch(() => {
+                // 오류 무시
+              });
+          }
+
+          // 타이머 완료 시 완료 페이지로 이동
+          navigate('/timer-completed');
         } else {
           setRemainingTime(remaining);
         }
@@ -52,7 +69,7 @@ const TimerContent: React.FC = () => {
     }
 
     return () => clearInterval(intervalId);
-  }, [isRunning, endTime, setIsRunning, setRemainingTime]);
+  }, [isRunning, endTime, setIsRunning, setRemainingTime, navigate]);
 
   const handleStartPause = () => {
     setIsRunning(!isRunning);
