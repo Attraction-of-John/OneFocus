@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { useTimerStore } from '@/stores/useTimerStore';
 import { formatTimer } from '@/utils/timerUtils';
@@ -7,42 +7,47 @@ import '@/styles/index.css';
 function PopupApp() {
   const { isRunning, remainingTime, currentTodo } = useTimerStore();
 
+  const attemptedOpenRef = useRef(false);
   useEffect(() => {
-    // 팝업이 열렸음을 백그라운드에 통지하여 다음 OneFocus 새 탭 1회 허용
-    if (typeof chrome !== 'undefined' && chrome.runtime?.id) {
+    let cancelled = false;
+    async function maybeOpenMainWhenNotRunning() {
+      if (attemptedOpenRef.current) return;
+      if (typeof chrome === 'undefined' || !chrome.runtime?.id) return;
+
+      // 백그라운드에서 실제 타이머 상태를 먼저 조회 (경쟁 상태 방지)
+      const bgState = await new Promise<any>((resolve) => {
+        try {
+          chrome.runtime.sendMessage({ type: 'GET_TIMER_STATE' }, (res) => resolve(res?.state || null));
+        } catch {
+          resolve(null);
+        }
+      });
+
+      if (cancelled || !bgState || bgState.isRunning) return;
+
+      attemptedOpenRef.current = true;
+
+      const extensionUrl = chrome.runtime.getURL('index.html');
       try {
-        chrome.runtime.sendMessage({ type: 'POPUP_OPENED' }, () => {});
+        chrome.tabs.query({ url: `${extensionUrl}*` }, (tabs) => {
+          if (cancelled) return;
+          if (tabs.length > 0 && tabs[0].id && tabs[0].windowId) {
+            chrome.tabs.update(tabs[0].id, { active: true });
+            chrome.windows.update(tabs[0].windowId, { focused: true, state: 'maximized' });
+          } else {
+            chrome.tabs.create({ url: `${extensionUrl}` });
+          }
+        });
       } catch {
         // ignore
       }
     }
 
-    // 타이머가 진행 중이 아니면 기존 탭 확인 후 이동
-    if (!isRunning) {
-      if (typeof chrome !== 'undefined' && chrome.tabs && chrome.windows) {
-        const extensionUrl = chrome.runtime.getURL('index.html');
-
-        // 기존 OneFocus 탭이 있는지 확인
-        chrome.tabs.query({ url: `${extensionUrl}*` }, (tabs) => {
-          if (tabs.length > 0 && tabs[0].id && tabs[0].windowId) {
-            // 기존 탭이 있으면 해당 탭을 활성화 (URL 변경 없음: 메인 유지)
-            chrome.tabs.update(tabs[0].id, {
-              active: true,
-            });
-
-            // 창을 포커스하고 최상위로 가져오기
-            chrome.windows.update(tabs[0].windowId, {
-              focused: true,
-              state: 'maximized',
-            });
-          } else {
-            // 기존 탭이 없으면 메인으로 새 탭 생성
-            chrome.tabs.create({ url: `${extensionUrl}` });
-          }
-        });
-      }
-    }
-  }, [isRunning]);
+    maybeOpenMainWhenNotRunning();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // 실시간 타이머 업데이트를 위한 인터벌
   useEffect(() => {
