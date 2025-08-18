@@ -194,8 +194,11 @@ if (typeof chrome !== 'undefined' && chrome.storage?.local && chrome.runtime?.id
 
   // 백그라운드에서 온 메시지 처리
   chrome.runtime.onMessage.addListener((message) => {
-    if (message.type === 'TIMER_UPDATE') {
-      useTimerStore.setState(message.state);
+    if (message.type === 'TIMER_UPDATE' && message.state) {
+      // 남은 시간만 0 미만 방지 보정
+      const next = { ...message.state } as any;
+      if (typeof next.remainingTime === 'number' && next.remainingTime < 0) next.remainingTime = 0;
+      useTimerStore.setState(next);
     }
     return true;
   });
