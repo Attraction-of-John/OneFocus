@@ -15,5 +15,6 @@ module.exports = {
   rules: {
     'tailwindcss/no-custom-classname': 'off',
     '@typescript-eslint/no-explicit-any': 'off',
+    '@typescript-eslint/no-unused-vars': 'off',
   },
 };

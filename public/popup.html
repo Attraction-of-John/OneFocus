@@ -24,6 +24,44 @@
         overflow: hidden;
       }
     </style>
+    <script>
+      (function () {
+        try {
+          var SETTINGS_KEY = 'onefocus_settings_v1';
+          var theme = 'light';
+          var language = 'en';
+
+          if (typeof chrome !== 'undefined' && chrome.storage && chrome.runtime && chrome.runtime.id) {
+            chrome.storage.local.get([SETTINGS_KEY], function (res) {
+              try {
+                var saved = res && res[SETTINGS_KEY];
+                if (saved && saved.theme === 'dark') {
+                  document.documentElement.classList.add('dark');
+                }
+                if (saved && saved.language) {
+                  document.documentElement.setAttribute('lang', saved.language);
+                  language = saved.language;
+                }
+                document.title = language && language.startsWith('ko') ? 'OneFocus 진행상황' : 'OneFocus Progress';
+              } catch (e) {}
+            });
+          } else {
+            var raw = localStorage.getItem(SETTINGS_KEY);
+            if (raw) {
+              var savedLocal = JSON.parse(raw);
+              if (savedLocal && savedLocal.theme === 'dark') {
+                document.documentElement.classList.add('dark');
+              }
+              if (savedLocal && savedLocal.language) {
+                document.documentElement.setAttribute('lang', savedLocal.language);
+                language = savedLocal.language;
+              }
+            }
+            document.title = language && language.startsWith('ko') ? 'OneFocus 진행상황' : 'OneFocus Progress';
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="popup-root"></div>

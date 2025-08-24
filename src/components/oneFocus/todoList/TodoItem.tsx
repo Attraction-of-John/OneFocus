@@ -10,6 +10,7 @@ import { useState } from 'react';
 import type { UniqueIdentifier } from '@dnd-kit/core';
 import { formatTime } from '@/utils/todoUtils';
 import { useTimerStore } from '@/stores/useTimerStore';
+import { useSettingsStore } from '@/stores/useSettingsStore';
 
 // 편집 가능한 필드 타입
 type EditableFields = {
@@ -33,6 +34,7 @@ const TodoItem: React.FC<TodoListItemProps> = ({ todo }) => {
   // Todo 및 타이머 스토어 액션
   const { updateTodoList, deleteTodoList } = useTodoStore();
   const { setTimerMode, setCurrentTodo, setIsRunning } = useTimerStore();
+  const { language } = useSettingsStore();
 
   // 편집 상태 관리
   const [isEditing, setIsEditing] = useState<EditableFields>({
@@ -96,9 +98,9 @@ const TodoItem: React.FC<TodoListItemProps> = ({ todo }) => {
 
   return (
     <div ref={setNodeRef} style={style}>
-      <div className="group flex items-center gap-4 rounded-2xl p-2 hover:bg-stone-100/30 transition-all">
+      <div className="group flex items-center gap-4 rounded-2xl p-2 hover:bg-accent/30 transition-all">
         {/* 드래그 핸들 */}
-        <span {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-gray-500">
+        <span {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-muted-foreground">
           <MdDragIndicator size={20} />
         </span>
 
@@ -107,12 +109,12 @@ const TodoItem: React.FC<TodoListItemProps> = ({ todo }) => {
           size="sm"
           variant="ghost"
           onClick={() => updateTodoList(todo.id, { completed: !todo.completed })}
-          className="shrink-0 h-6 w-6 rounded-full p-0.5 hover:bg-stone-100/20 relative"
+          className="shrink-0 h-6 w-6 rounded-full p-0.5 hover:bg-accent/20 relative"
         >
           {todo.completed ? (
             <Check className="h-4 w-4 text-primary" />
           ) : (
-            <div className="h-4 w-4 rounded-full border-[1.5px] border-stone-500" />
+            <div className="h-4 w-4 rounded-full border-[1.5px] border-border" />
           )}
         </Button>
 
@@ -131,7 +133,7 @@ const TodoItem: React.FC<TodoListItemProps> = ({ todo }) => {
               />
             ) : (
               <span
-                className={`text-lg ${todo.completed ? 'line-through text-gray-500' : ''}`}
+                className={`text-lg ${todo.completed ? 'line-through text-muted-foreground' : ''}`}
                 onClick={() => handleFieldClick('text')}
               >
                 {todo.text}
@@ -154,7 +156,7 @@ const TodoItem: React.FC<TodoListItemProps> = ({ todo }) => {
                 className="text-xs cursor-pointer"
                 onClick={() => handleFieldClick('category')}
               >
-                {todo.category || '없음'}
+                {todo.category || 'common.none'}
               </Badge>
             )}
 
@@ -175,7 +177,7 @@ const TodoItem: React.FC<TodoListItemProps> = ({ todo }) => {
                   className="text-xs cursor-pointer"
                   onClick={() => handleFieldClick('deadline')}
                 >
-                  {new Date(todo.deadline).toLocaleDateString('ko-KR', {
+                  {new Date(todo.deadline).toLocaleDateString(language === 'en' ? 'en-US' : 'ko-KR', {
                     month: 'short',
                     day: 'numeric',
                   })}
@@ -200,10 +202,10 @@ const TodoItem: React.FC<TodoListItemProps> = ({ todo }) => {
             />
           ) : (
             <span
-              className="text-sm text-gray-500 tabular-nums cursor-pointer"
+              className="text-sm text-muted-foreground tabular-nums cursor-pointer"
               onClick={() => handleFieldClick('allottedTime')}
             >
-              {formatTime(todo.allottedTime)}
+              {formatTime(todo.allottedTime, language)}
             </span>
           )}
 
@@ -226,7 +228,7 @@ const TodoItem: React.FC<TodoListItemProps> = ({ todo }) => {
         </div>
       </div>
       {/* 구분선 */}
-      <div className="border-b border-stone-500/70 mx-3" />
+      <div className="border-b border-border/70 mx-3" />
     </div>
   );
 };

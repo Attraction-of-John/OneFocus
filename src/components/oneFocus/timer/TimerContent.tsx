@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { formatTimer } from '@/utils/timerUtils';
 import { useTimerStore } from '@/stores/useTimerStore';
 import { useEffect } from 'react';
+import { useSettingsStore } from '@/stores/useSettingsStore';
 
 const TimerContent: React.FC = () => {
   const navigate = useNavigate();
@@ -20,7 +21,7 @@ const TimerContent: React.FC = () => {
     resetTimer,
     setRemainingTime,
   } = useTimerStore();
-
+  const { language } = useSettingsStore();
   useEffect(() => {
     if (isRunning) {
       const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -131,18 +132,18 @@ const TimerContent: React.FC = () => {
             {isRunning ? (
               <>
                 <Pause className="h-4 w-4 mr-2" />
-                일시정지
+                {language === 'en' ? 'Pause' : '일시정지'}
               </>
             ) : (
               <>
                 <Play className="h-4 w-4 mr-2" />
-                계속하기
+                {language === 'en' ? 'Continue' : '계속하기'}
               </>
             )}
           </Button>
           <Button onClick={handleCancel} variant="outline" className="w-32 border-white text-white hover:bg-white/20">
             <X className="h-4 w-4 mr-2" />
-            타이머 취소
+            {language === 'en' ? 'Cancel' : '타이머 취소'}
           </Button>
         </div>
       </CardContent>

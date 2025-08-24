@@ -18,6 +18,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useState } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import FailDialog from './FailDialog';
+import { useTranslation } from 'react-i18next';
+import { useSettingsStore } from '@/stores/useSettingsStore';
 
 interface TodoDialogProps {
   isOpen: boolean;
@@ -26,15 +28,19 @@ interface TodoDialogProps {
 }
 
 const TodoDialog: React.FC<TodoDialogProps> = ({ isOpen, setIsOpen, disabled }) => {
+  const { t } = useTranslation();
+  const { language } = useSettingsStore();
   const {
     register,
     handleSubmit,
     formState: { errors },
+    setValue,
+    watch,
   } = useForm<Omit<Todo, 'id' | 'completed' | 'order'> & { customCategory?: string }>({
     defaultValues: {
       text: '',
       allottedTime: 30,
-      category: '일반',
+      category: t('tododialog.optionGeneral'),
       deadline: new Date().toISOString().split('T')[0],
     },
   });
@@ -44,7 +50,7 @@ const TodoDialog: React.FC<TodoDialogProps> = ({ isOpen, setIsOpen, disabled }) 
   >({
     text: '',
     allottedTime: 30,
-    category: '일반',
+    category: t('tododialog.optionGeneral'),
     deadline: new Date().toISOString().split('T')[0],
   });
 
@@ -56,7 +62,8 @@ const TodoDialog: React.FC<TodoDialogProps> = ({ isOpen, setIsOpen, disabled }) 
 
   const onSubmit = (data: Omit<Todo, 'id' | 'completed' | 'order'> & { customCategory?: string }) => {
     try {
-      const category = data.category === '직접 작성' ? (data.customCategory ?? '') : (data.category ?? '');
+      const category =
+        data.category === t('tododialog.optionCustom') ? (data.customCategory ?? '') : (data.category ?? '');
       const todoData = {
         ...data,
         category,
@@ -81,24 +88,24 @@ const TodoDialog: React.FC<TodoDialogProps> = ({ isOpen, setIsOpen, disabled }) 
               ${disabled ? 'opacity-0 cursor-not-allowed pointer-events-none' : ''}`}
           >
             <MdOutlineAddTask />
-            Todo 추가
+            {t('tododialog.open')}
           </Badge>
         </DialogTrigger>
         <DialogContent className="sm:max-w-[500px] transition-transform duration-200">
           <DialogHeader>
-            <DialogTitle>할일 추가</DialogTitle>
-            <DialogDescription>새로운 할일을 추가하세요.</DialogDescription>
+            <DialogTitle>{t('tododialog.title')}</DialogTitle>
+            <DialogDescription>{t('tododialog.description')}</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit(onSubmit)}>
             <div className="grid gap-4">
               <div className="grid grid-cols-4 items-start gap-4 pt-4">
                 <Label htmlFor="todo-text" className="text-right mt-3">
-                  할일
+                  {t('tododialog.labelText')}
                 </Label>
                 <div className="col-span-3">
                   <Input
                     id="todo-text"
-                    {...register('text', { required: '할일을 입력해주세요.' })}
+                    {...register('text', { required: t('tododialog.errTextRequired') })}
                     className="w-full"
                   />
                   <span className="min-h-[1.25rem] text-red-500 p-1 text-sm">{errors.text?.message}</span>
@@ -106,7 +113,7 @@ const TodoDialog: React.FC<TodoDialogProps> = ({ isOpen, setIsOpen, disabled }) 
               </div>
               <div className="grid grid-cols-4 items-start gap-4">
                 <Label htmlFor="assigned-time" className="text-right mt-3">
-                  할당 시간 (분)
+                  {t('tododialog.labelAllottedTime')}
                 </Label>
                 <div className="col-span-3">
                   <Input
@@ -114,8 +121,8 @@ const TodoDialog: React.FC<TodoDialogProps> = ({ isOpen, setIsOpen, disabled }) 
                     type="number"
                     step={10}
                     {...register('allottedTime', {
-                      required: '할당 시간을 입력해주세요.',
-                      min: { value: 1, message: '할당 시간은 0보다 커야 합니다.' },
+                      required: t('tododialog.errAllottedTimeRequired'),
+                      min: { value: 1, message: t('tododialog.errAllottedTimeMin') },
                     })}
                     className="w-full"
                   />
@@ -124,39 +131,44 @@ const TodoDialog: React.FC<TodoDialogProps> = ({ isOpen, setIsOpen, disabled }) 
               </div>
               <div className="grid grid-cols-4 items-start gap-4">
                 <Label htmlFor="category" className="text-right mt-3">
-                  카테고리
+                  {t('tododialog.labelCategory')}
                 </Label>
                 <div className="col-span-3">
                   {isCustomCategory ? (
                     <>
                       <Input
                         id="custom-category"
-                        placeholder="카테고리를 입력하세요."
-                        {...register('customCategory', { required: '카테고리를 입력해주세요.' })}
+                        placeholder={t('tododialog.placeholderCategory')}
+                        {...register('customCategory', { required: t('tododialog.errCategoryRequired') })}
                         className="w-full"
                       />
                       <span className="min-h-[1.25rem] text-red-500 p-1 text-sm">{errors.customCategory?.message}</span>
                     </>
                   ) : (
                     <Select
-                      value={newTodoDetails.category}
+                      value={watch('category')}
                       onValueChange={(value: string) => {
-                        if (value === '직접 작성') {
+                        if (value === t('tododialog.optionCustom')) {
                           setIsCustomCategory(true);
-                        } else {
+                          setValue('category', value);
                           setNewTodoDetails({ ...newTodoDetails, category: value });
+                          return;
                         }
+                        setValue('category', value);
+                        setNewTodoDetails({ ...newTodoDetails, category: value });
                       }}
                     >
                       <SelectTrigger className="col-span-3">
-                        <SelectValue placeholder="카테고리 선택" />
+                        <SelectValue placeholder={t('tododialog.selectCategory')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="일반">일반</SelectItem>
-                        <SelectItem value="업무">업무</SelectItem>
-                        <SelectItem value="개인">개인</SelectItem>
-                        <SelectItem value="중요">중요</SelectItem>
-                        <SelectItem value="직접 작성">직접 작성</SelectItem>
+                        <SelectItem value={t('tododialog.optionGeneral')}>{t('tododialog.optionGeneral')}</SelectItem>
+                        <SelectItem value={t('tododialog.optionWork')}>{t('tododialog.optionWork')}</SelectItem>
+                        <SelectItem value={t('tododialog.optionPersonal')}>{t('tododialog.optionPersonal')}</SelectItem>
+                        <SelectItem value={t('tododialog.optionImportant')}>
+                          {t('tododialog.optionImportant')}
+                        </SelectItem>
+                        <SelectItem value={t('tododialog.optionCustom')}>{t('tododialog.optionCustom')}</SelectItem>
                       </SelectContent>
                     </Select>
                   )}
@@ -164,13 +176,16 @@ const TodoDialog: React.FC<TodoDialogProps> = ({ isOpen, setIsOpen, disabled }) 
                 </div>
               </div>
               <div className="grid grid-cols-4 items-start gap-4">
-                <Label htmlFor="date" className="text-right flex items-center ml-10 mt-3 gap-2">
+                <Label
+                  htmlFor="date"
+                  className={`text-right flex items-center ${language === 'en' ? 'ml-6' : 'ml-10'} mt-3 gap-2`}
+                >
                   <Checkbox
                     id="enable-deadline"
                     checked={isDeadlineEnabled}
                     onCheckedChange={(checked) => setIsDeadlineEnabled(!!checked)}
                   />
-                  마감일
+                  {t('tododialog.labelDeadline')}
                 </Label>
                 <div className="col-span-3">
                   <Input
@@ -178,7 +193,7 @@ const TodoDialog: React.FC<TodoDialogProps> = ({ isOpen, setIsOpen, disabled }) 
                     type="date"
                     disabled={!isDeadlineEnabled}
                     {...register('deadline', {
-                      required: isDeadlineEnabled ? '날짜를 선택해주세요.' : false,
+                      required: isDeadlineEnabled ? (t('tododialog.errDeadlineRequired') as string) : false,
                       validate: (value) => {
                         if (!isDeadlineEnabled) return true;
                         const selectedDate = new Date(value ?? '');
@@ -187,7 +202,7 @@ const TodoDialog: React.FC<TodoDialogProps> = ({ isOpen, setIsOpen, disabled }) 
                         selectedDate.setHours(0, 0, 0, 0);
                         today.setHours(0, 0, 0, 0);
 
-                        return selectedDate >= today || '과거 날짜는 선택할 수 없습니다.';
+                        return selectedDate >= today || (t('tododialog.errDeadlinePast') as string);
                       },
                     })}
                     className="w-full"
@@ -199,7 +214,7 @@ const TodoDialog: React.FC<TodoDialogProps> = ({ isOpen, setIsOpen, disabled }) 
               </div>
             </div>
             <Button type="submit" className="w-full my-4">
-              추가
+              {t('tododialog.submit')}
             </Button>
           </form>
         </DialogContent>

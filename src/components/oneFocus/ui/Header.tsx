@@ -5,6 +5,8 @@ import { IoSearch } from 'react-icons/io5';
 import { formatDateTime } from '@/utils/dateUtils';
 import { useSearch } from '@/hooks/useSearch';
 import { useTimerStore } from '@/stores/useTimerStore';
+import { useSettingsStore } from '@/stores/useSettingsStore';
+import { useTranslation } from 'react-i18next';
 
 const Header: React.FC = () => {
   const [currentDateTime, setCurrentDateTime] = useState(formatDateTime());
@@ -20,13 +22,15 @@ const Header: React.FC = () => {
     setIsSearchFocused,
   } = useSearch();
   const { isTimerMode, isRunning } = useTimerStore();
+  const { language } = useSettingsStore();
+  const { t } = useTranslation();
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentDateTime(formatDateTime());
-    }, 1000);
+    const tick = () => setCurrentDateTime(formatDateTime());
+    const timer = setInterval(tick, 1000);
+    tick();
     return () => clearInterval(timer);
-  }, []);
+  }, [language]);
 
   useEffect(() => {
     const currentRef = searchContainerRef.current;
@@ -43,12 +47,12 @@ const Header: React.FC = () => {
 
   return (
     <div className="flex flex-col items-center gap-4 mb-8 justify-between relative z-50">
-      <div className="w-full bg-stone-100/50 backdrop-blur-lg rounded-3xl px-5 py-2 flex items-center">
+      <div className="w-full bg-card/50 backdrop-blur-lg rounded-3xl px-5 py-2 flex items-center">
         <div className="px-2">
           <span
             className={`
             text-lg transition-colors duration-700
-            ${isTimerMode && isRunning ? 'text-white' : 'text-black'}
+            ${isTimerMode && isRunning ? 'text-foreground' : 'text-foreground'}
           `}
           >
             {currentDateTime.time}
@@ -57,7 +61,7 @@ const Header: React.FC = () => {
           <span
             className={`
             text-base transition-colors duration-700
-            ${isTimerMode && isRunning ? 'text-gray-200' : 'text-gray-800'}
+            ${isTimerMode && isRunning ? 'text-muted-foreground' : 'text-muted-foreground'}
           `}
           >
             {currentDateTime.date}
@@ -77,7 +81,7 @@ const Header: React.FC = () => {
             onChange={(e) => handleSearch(e.target.value)}
             onFocus={() => setIsSearchFocused(true)}
             onKeyDown={handleKeyDown}
-            placeholder="Google Search"
+            placeholder={t('common.googleSearch')}
             className={`
               pl-9 border-0 bg-white/80 border-gray-200 focus-visible:ring-0 focus-visible:bg-white focus-visible:ring-offset-0
               ${suggestions.length > 0 && searchTerm && isSearchFocused ? 'rounded-t-3xl rounded-b-none' : 'rounded-3xl'}
