@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OneFocus 개인정보 처리방침</title>
+    <meta name="description" content="OneFocus 개인정보 처리방침" />
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue',
+          Arial, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+        line-height: 1.6;
+      }
+      .container {
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 32px 20px;
+      }
+      h1 {
+        font-size: 28px;
+        margin: 0 0 16px;
+      }
+      h2 {
+        font-size: 20px;
+        margin: 28px 0 8px;
+      }
+      p,
+      li {
+        font-size: 15px;
+      }
+      .meta {
+        color: #6b7280;
+        font-size: 14px;
+        margin-bottom: 20px;
+      }
+      ul {
+        padding-left: 20px;
+      }
+      a {
+        color: #2563eb;
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+      .footer {
+        margin-top: 40px;
+        font-size: 13px;
+        color: #6b7280;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+      <h1>OneFocus 개인정보 처리방침</h1>
+      <p class="meta">최종 업데이트: 2025-08-24</p>
+
+      <p>
+        본 개인정보 처리방침은 OneFocus 확장 프로그램(이하 “본 확장”)의 개인정보 처리에 관한 내용을 설명합니다. 본
+        확장은 사용자의 생산성 향상을 위해 타이머, 할 일 관리, 알림 기능을 제공합니다.
+      </p>
+
+      <h2>1. 수집하는 개인정보</h2>
+      <p>
+        본 확장은 개발자 서버로 어떠한 개인정보도 전송·저장하지 않습니다. 다음 정보는 사용자의 브라우저 로컬
+        저장소(<code>chrome.storage.local</code>)에만 저장됩니다.
+      </p>
+      <ul>
+        <li>타이머 상태(시작/종료 시각, 남은 시간)</li>
+        <li>할 일 목록(텍스트, 카테고리, 식별자)</li>
+        <li>진행 측정치(시작/종료 시각, 소요 시간, 연결된 할 일 ID)</li>
+      </ul>
+
+      <h2>2. 처리 목적</h2>
+      <ul>
+        <li>집중 타이머 실행 및 남은 시간 배지 표시</li>
+        <li>타이머 완료 알림 제공</li>
+        <li>할 일 및 측정 데이터의 오프라인 관리</li>
+      </ul>
+
+      <h2>3. 제3자 제공 및 외부 전송</h2>
+      <p>
+        개발자는 사용자 데이터를 제3자에게 판매·공유하지 않습니다. 다만 사용자가 검색 제안 기능을 이용할 경우, 입력한
+        질의어가 Google Suggest API(<a
+          href="https://suggestqueries.google.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          >https://suggestqueries.google.com</a
+        >)로 전송될 수 있습니다. 이 통신은 브라우저가 구글에 직접 요청하며, 개발자 서버를 경유하거나 저장하지 않습니다.
+        Google의 처리에 대해서는 Google의 개인정보처리방침을 따릅니다.
+      </p>
+
+      <h2>4. 보관 기간 및 파기</h2>
+      <p>
+        로컬 저장 데이터는 사용자가 직접 삭제하거나 확장을 제거할 때까지 보관됩니다. 사용자는 확장 설정 초기화 또는
+        브라우저의 확장 데이터 삭제 기능을 통해 언제든 데이터를 삭제할 수 있습니다.
+      </p>
+
+      <h2>5. 권한 사용</h2>
+      <ul>
+        <li><strong>tabs</strong>: 타이머 실행 중 새 탭을 제한/닫고, 완료 시 OneFocus 탭을 활성화하기 위해 사용</li>
+        <li><strong>storage</strong>: 타이머/할 일/측정 데이터를 로컬에 저장하기 위해 사용</li>
+        <li><strong>notifications</strong>: 타이머 완료 알림 제공을 위해 사용</li>
+        <li><strong>activeTab</strong> (선택): 완료 시 확장 페이지를 전면 표시하는 등 포커스 전환을 위해 사용</li>
+        <li><strong>bookmarks</strong> (선택): 북마크 연계 기능 사용 시에만 필요(미사용 시 요청하지 않음)</li>
+      </ul>
+
+      <h2>6. 보안 조치</h2>
+      <ul>
+        <li>원격 코드 실행 또는 동적 스크립트 주입을 사용하지 않습니다.</li>
+        <li>모든 실행 코드는 확장 패키지에 정적으로 포함되며, CSP로 외부 스크립트 로딩을 제한합니다.</li>
+        <li>민감정보를 수집·저장하지 않습니다.</li>
+      </ul>
+
+      <h2>7. 아동의 개인정보</h2>
+      <p>본 확장은 아동을 대상으로 하지 않으며 아동의 개인정보를 알게 모르게 수집하지 않습니다.</p>
+
+      <h2>8. 사용자의 선택과 통제</h2>
+      <ul>
+        <li>데이터 삭제: 확장 설정 초기화 또는 브라우저의 확장 데이터 삭제 기능을 사용하세요.</li>
+        <li>권한 관리: 브라우저 설정에서 개별 권한을 해지할 수 있습니다.</li>
+        <li>확장 제거: 브라우저 확장 관리 화면에서 제거할 수 있습니다.</li>
+      </ul>
+
+      <h2>9. 국제이전</h2>
+      <p>개발자 서버 저장이 없어 국제 이전이 발생하지 않습니다.</p>
+
+      <h2>10. 문의처</h2>
+      <p>
+        문의 이메일: <a href="mailto:difbfl4750@naver.com">difbfl4750@naver.com</a><br />
+        문의 시 확장 이름(OneFocus)과 버전 정보를 함께 보내 주세요.
+      </p>
+
+      <h2>11. 처리방침의 변경</h2>
+      <p>
+        본 방침은 기능 또는 정책 변경 시 업데이트되며, 변경 사항은 스토어 페이지 또는 프로젝트 저장소에서 고지합니다.
+      </p>
+
+      <p class="footer">© OneFocus</p>
+    </main>
+  </body>
+</html>
