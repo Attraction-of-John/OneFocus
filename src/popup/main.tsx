@@ -3,9 +3,12 @@ import { createRoot } from 'react-dom/client';
 import { useTimerStore } from '@/stores/useTimerStore';
 import { formatTimer } from '@/utils/timerUtils';
 import '@/styles/index.css';
+import '@/i18n';
+import { useTranslation } from 'react-i18next';
 
 function PopupApp() {
   const { isRunning, remainingTime, currentTodo } = useTimerStore();
+  const { t } = useTranslation();
 
   const attemptedOpenRef = useRef(false);
   useEffect(() => {
@@ -79,20 +82,20 @@ function PopupApp() {
   // };
 
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center p-6 bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 text-gray-800 overflow-hidden">
+    <div className="w-full h-full flex flex-col items-center justify-center p-6 bg-background text-foreground overflow-hidden">
       {/* 헤더 */}
       <div className="text-center mb-2">
-        <h2 className="text-2xl font-bold mb-2 text-gray-800">OneFocus</h2>
-        <p className="text-sm text-gray-600">집중 시간 관리</p>
+        <h2 className="text-2xl font-bold mb-2">{t('popup.title')}</h2>
+        <p className="text-sm text-muted-foreground">{t('popup.subtitle')}</p>
       </div>
 
       {/* 진행상황 표시 */}
       {currentTodo ? (
         <div className="w-full mb-2">
           <div className="text-center mb-2">
-            <h3 className="text-lg font-semibold mb-2 text-gray-800">{currentTodo.text}</h3>
+            <h3 className="text-lg font-semibold mb-2">{currentTodo.text}</h3>
             {currentTodo.category && (
-              <span className="text-sm px-3 py-1 text-gray-600 bg-gray-200 rounded-full border border-gray-300 inline-block mt-2">
+              <span className="text-sm px-3 py-1 text-muted-foreground bg-muted rounded-full border border-border inline-block mt-2">
                 {currentTodo.category}
               </span>
             )}
@@ -100,16 +103,16 @@ function PopupApp() {
 
           {/* 진행상황 퍼센트 */}
           <div className="text-center mb-2">
-            <div className="text-sm text-gray-600 mb-1">진행상황</div>
-            <div className="text-2xl font-bold text-gray-800">
+            <div className="text-sm text-muted-foreground mb-1">{t('popup.progress')}</div>
+            <div className="text-2xl font-bold">
               {Math.round(((currentTodo.allottedTime * 60 - remainingTime) / (currentTodo.allottedTime * 60)) * 100)}%
             </div>
           </div>
 
           {/* 진행상황 바 */}
-          <div className="w-full h-3 mb-2 overflow-hidden bg-gray-200 rounded-full shadow-inner">
+          <div className="w-full h-3 mb-2 overflow-hidden bg-muted rounded-full shadow-inner">
             <div
-              className="h-full relative overflow-hidden rounded-full bg-gradient-to-r from-blue-500 via-blue-400 to-emerald-500 shadow transition-[width] duration-500 ease-out"
+              className="h-full relative overflow-hidden rounded-full bg-primary shadow transition-[width] duration-500 ease-out"
               style={{
                 width: `${((currentTodo.allottedTime * 60 - remainingTime) / (currentTodo.allottedTime * 60)) * 100}%`,
               }}
@@ -117,22 +120,22 @@ function PopupApp() {
           </div>
 
           {/* 남은 시간 */}
-          <div className="text-center text-sm text-gray-600">
-            남은 시간: {Math.floor(remainingTime / 60)}분 {remainingTime % 60}초
+          <div className="text-center text-sm text-muted-foreground">
+            {t('popup.remainingTimeLabel', { minutes: Math.floor(remainingTime / 60), seconds: remainingTime % 60 })}
           </div>
         </div>
       ) : (
         <div className="w-full mb-2 text-center">
-          <div className="text-lg font-semibold text-gray-600 mb-2">할 일을 선택해주세요</div>
-          <div className="text-sm text-gray-500">메인 페이지에서 할 일을 선택하고 타이머를 시작하세요</div>
+          <div className="text-lg font-semibold text-muted-foreground mb-2">{t('popup.noTaskTitle')}</div>
+          <div className="text-sm text-muted-foreground">{t('popup.noTaskHint')}</div>
         </div>
       )}
 
       {/* 타이머 정보 */}
       <div className="text-center mb-2 flex-1 flex flex-col justify-center">
-        <div className="text-xl font-mono font-bold mb-3 text-gray-800">{formatTimer(remainingTime)}</div>
-        <div className="text-sm px-4 py-2 text-gray-600 bg-gray-200 rounded-full inline-block">
-          {isRunning ? '집중 중...' : '대기 중'}
+        <div className="text-xl font-mono font-bold mb-3">{formatTimer(remainingTime)}</div>
+        <div className="text-sm px-4 py-2 text-muted-foreground bg-muted rounded-full inline-block">
+          {isRunning ? t('popup.status.running') : t('popup.status.idle')}
         </div>
       </div>
     </div>
