@@ -3,12 +3,49 @@ import { createRoot } from 'react-dom/client';
 import { useTimerStore } from '@/stores/useTimerStore';
 import { formatTimer } from '@/utils/timerUtils';
 import '@/styles/index.css';
-import '@/i18n';
+import i18n from '@/i18n';
 import { useTranslation } from 'react-i18next';
 
 function PopupApp() {
   const { isRunning, remainingTime, currentTodo } = useTimerStore();
   const { t } = useTranslation();
+
+  // 초기 언어/테마를 settings에서 반영 (i18n은 기본적으로 navigator/localStorage를 보지만, 우리는 커스텀 키를 씀)
+  useEffect(() => {
+    const SETTINGS_KEY = 'onefocus_settings_v1';
+    try {
+      if (typeof chrome !== 'undefined' && chrome.storage?.local && chrome.runtime?.id) {
+        chrome.storage.local.get([SETTINGS_KEY], (res) => {
+          try {
+            const saved = res?.[SETTINGS_KEY] as { language?: string; theme?: string } | undefined;
+            if (saved?.language) {
+              void i18n.changeLanguage(saved.language);
+              document.documentElement.setAttribute('lang', saved.language);
+            }
+            if (saved?.theme === 'dark') document.documentElement.classList.add('dark');
+            else document.documentElement.classList.remove('dark');
+            document.title = i18n.t('popup.htmlTitle');
+          } catch {
+            // ignore
+          }
+        });
+      } else {
+        const raw = localStorage.getItem(SETTINGS_KEY);
+        if (raw) {
+          const saved = JSON.parse(raw) as { language?: string; theme?: string };
+          if (saved?.language) {
+            void i18n.changeLanguage(saved.language);
+            document.documentElement.setAttribute('lang', saved.language);
+          }
+          if (saved?.theme === 'dark') document.documentElement.classList.add('dark');
+          else document.documentElement.classList.remove('dark');
+        }
+        document.title = i18n.t('popup.htmlTitle');
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
 
   const attemptedOpenRef = useRef(false);
   useEffect(() => {
