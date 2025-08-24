@@ -3,6 +3,7 @@ import { createHashRouter, RouterProvider } from 'react-router-dom';
 import './styles/index.css';
 import App from '@/App';
 import TimerCompletedPage from '@/pages/TimerCompletedPage';
+import '@/i18n';
 
 const router = createHashRouter([
   {

@@ -1,0 +1,173 @@
+import i18n from 'i18next';
+import { initReactI18next } from 'react-i18next';
+import LanguageDetector from 'i18next-browser-languagedetector';
+
+const resources = {
+  en: {
+    translation: {
+      quote: {
+        title: 'Quote of the Day',
+      },
+      settings: {
+        title: 'Settings',
+        language: 'Language',
+        theme: 'Theme',
+        background: 'Background',
+        datetime: 'Date & Time Format',
+        light: 'Light',
+        dark: 'Dark',
+        builtin: 'Built-in',
+        custom: 'Custom Image',
+        dateFormat: 'Date format',
+        timeFormat: 'Time format',
+        upload: 'Upload image',
+        reset: 'Reset',
+        close: 'Close',
+        save: 'Save',
+        presets: 'Presets',
+      },
+      common: {
+        bookmarks: 'Bookmarks',
+        add: 'Add',
+        cancel: 'Cancel',
+        confirm: 'Confirm',
+        ok: 'OK',
+        loading: 'Loading... ',
+        errorPrefix: 'An error occurred: ',
+        googleSearch: 'Google Search',
+      },
+      bookmarks: {
+        addTitle: 'Add Bookmark',
+        urlPlaceholder: 'https://example.com',
+        labelPlaceholder: 'Label (optional)',
+        add: 'Add',
+        empty: 'No bookmarks saved.',
+        deleteAria: 'Delete bookmark',
+      },
+      todolist: {
+        title: 'Todo List',
+        empty: 'No items. Click "Add Todo" to create one.',
+        add: 'Add Todo',
+      },
+      tododialog: {
+        open: 'Add Todo',
+        title: 'Add Todo',
+        description: 'Create a new todo.',
+        labelText: 'Todo',
+        labelAllottedTime: 'Allotted Time (min)',
+        labelCategory: 'Category',
+        placeholderCategory: 'Enter a category.',
+        selectCategory: 'Select category',
+        optionGeneral: 'General',
+        optionWork: 'Work',
+        optionPersonal: 'Personal',
+        optionImportant: 'Important',
+        optionCustom: 'Custom',
+        labelDeadline: 'Deadline',
+        submit: 'Add',
+        errTextRequired: 'Please enter a todo.',
+        errAllottedTimeRequired: 'Please enter allotted time.',
+        errAllottedTimeMin: 'Allotted time must be greater than 0.',
+        errCategoryRequired: 'Please enter a category.',
+        errDeadlineRequired: 'Please select a date.',
+        errDeadlinePast: 'Past dates are not allowed.',
+      },
+      faildialog: {
+        title: 'Failed to add',
+        description: 'Failed to add the todo. Please try again.',
+      },
+    },
+  },
+  ko: {
+    translation: {
+      quote: {
+        title: '오늘의 명언',
+      },
+      settings: {
+        title: '설정',
+        language: '언어',
+        theme: '테마',
+        background: '배경화면',
+        datetime: '날짜/시간 형식',
+        light: '라이트',
+        dark: '다크',
+        builtin: '기본 이미지',
+        custom: '사용자 이미지',
+        dateFormat: '날짜 형식',
+        timeFormat: '시간 형식',
+        upload: '이미지 업로드',
+        reset: '초기화',
+        close: '닫기',
+        save: '저장',
+        presets: '프리셋',
+      },
+      common: {
+        bookmarks: '북마크',
+        add: '추가',
+        cancel: '취소',
+        confirm: '확인',
+        ok: '확인',
+        loading: '로딩중...',
+        errorPrefix: '에러가 발생했습니다: ',
+        googleSearch: '구글 검색',
+      },
+      bookmarks: {
+        addTitle: '북마크 추가',
+        urlPlaceholder: 'https://example.com',
+        labelPlaceholder: '라벨 (선택)',
+        add: '추가',
+        empty: '저장된 북마크가 없습니다.',
+        deleteAria: '북마크 삭제',
+      },
+      todolist: {
+        title: '할 일 목록',
+        empty: '할 일이 없습니다. 아래의 "Todo 추가" 버튼을 클릭하세요.',
+        add: 'Todo 추가',
+      },
+      tododialog: {
+        open: 'Todo 추가',
+        title: '할일 추가',
+        description: '새로운 할일을 추가하세요.',
+        labelText: '할일',
+        labelAllottedTime: '할당 시간 (분)',
+        labelCategory: '카테고리',
+        placeholderCategory: '카테고리를 입력하세요.',
+        selectCategory: '카테고리 선택',
+        optionGeneral: '일반',
+        optionWork: '업무',
+        optionPersonal: '개인',
+        optionImportant: '중요',
+        optionCustom: '직접 작성',
+        labelDeadline: '마감일',
+        submit: '추가',
+        errTextRequired: '할일을 입력해주세요.',
+        errAllottedTimeRequired: '할당 시간을 입력해주세요.',
+        errAllottedTimeMin: '할당 시간은 0보다 커야 합니다.',
+        errCategoryRequired: '카테고리를 입력해주세요.',
+        errDeadlineRequired: '날짜를 선택해주세요.',
+        errDeadlinePast: '과거 날짜는 선택할 수 없습니다.',
+      },
+      faildialog: {
+        title: '추가 실패',
+        description: '할일을 추가하는 데 실패했습니다. 다시 시도해주세요.',
+      },
+    },
+  },
+} as const;
+
+void i18n
+  .use(LanguageDetector) // 브라우저 언어 감지
+  .use(initReactI18next)
+  .init({
+    debug: false,
+    resources,
+    fallbackLng: 'en',
+    interpolation: { escapeValue: false },
+    detection: {
+      // Use browser language by default; will be overridden by settings store when user changes language
+      order: ['querystring', 'localStorage', 'navigator'],
+      caches: [],
+    },
+  });
+
+export default i18n;

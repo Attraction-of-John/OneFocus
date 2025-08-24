@@ -5,6 +5,7 @@ import { useBookmarkStore } from '@/stores/useBookmarkStore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useTranslation } from 'react-i18next';
 
 const BookmarkIcon: React.FC<{ url: string; label?: string }> = ({ url, label }) => {
   const [failed, setFailed] = useState(false);
@@ -21,7 +22,7 @@ const BookmarkIcon: React.FC<{ url: string; label?: string }> = ({ url, label })
   const faviconSrc = `https://www.google.com/s2/favicons?sz=64&domain_url=${encodeURIComponent(url)}`;
 
   return (
-    <div className="w-8 h-8 rounded-md bg-white/80 flex items-center justify-center overflow-hidden">
+    <div className="w-8 h-8 rounded-md bg-card/80 flex items-center justify-center overflow-hidden">
       {!failed ? (
         <img
           src={faviconSrc}
@@ -30,13 +31,14 @@ const BookmarkIcon: React.FC<{ url: string; label?: string }> = ({ url, label })
           onError={() => setFailed(true)}
         />
       ) : (
-        <span className="text-xs font-semibold text-gray-700">{initial}</span>
+        <span className="text-xs font-semibold text-foreground">{initial}</span>
       )}
     </div>
   );
 };
 
 const BookmarkWidget: React.FC = () => {
+  const { t } = useTranslation();
   const { bookmarks, addBookmark, removeBookmark, setChromeBarBookmarks } = useBookmarkStore();
   const [isOpen, setIsOpen] = useState(false);
   const [hoveredId, setHoveredId] = useState<number | null>(null);
@@ -95,36 +97,44 @@ const BookmarkWidget: React.FC = () => {
 
   return (
     <div className="fixed top-4 left-4 z-50">
-      <div className="relative inline-flex  justify-center bg-stone-100/60 backdrop-blur-lg rounded-2xl px-3 py-2 shadow-sm">
+      <div className="relative inline-flex  justify-center bg-card/60 backdrop-blur-lg rounded-2xl px-3 py-2 shadow-sm">
         <button
-          aria-label="Bookmarks"
-          className="p-2 rounded-full hover:bg-black/5 text-black"
+          aria-label={t('common.bookmarks')}
+          className="p-2 rounded-full hover:bg-accent text-foreground"
           onClick={() => setIsOpen((v) => !v)}
         >
           {isOpen ? <IoClose className="w-5 h-5" /> : <IoBookmarksOutline className="w-5 h-5" />}
         </button>
 
         {isOpen && (
-          <div className="absolute left-0 top-full mt-2 items-center justify-center w-full h-[calc(100vh-6rem)] max-h-[calc(100vh-6rem)] origin-top-left of-animate-bounce-in bg-stone-100/70 backdrop-blur-lg rounded-2xl p-3 shadow flex flex-col gap-3 overflow-hidden">
+          <div className="absolute left-0 top-full mt-2 items-center justify-center w-full h-[calc(100vh-6rem)] max-h-[calc(100vh-6rem)] origin-top-left of-animate-bounce-in bg-card/70 backdrop-blur-lg rounded-2xl p-3 shadow flex flex-col gap-3 overflow-hidden">
             <Dialog>
               <DialogTrigger asChild>
-                <button className="mx-auto flex h-8 w-8 items-center mb-2 justify-center rounded-md bg-black text-white hover:bg-black/90">
+                <button className="mx-auto flex h-8 w-8 items-center mb-2 justify-center rounded-md bg-primary text-primary-foreground hover:opacity-90">
                   <IoAddOutline className="w-4 h-4" />
                 </button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>북마크 추가</DialogTitle>
+                  <DialogTitle>{t('bookmarks.addTitle')}</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-3">
-                  <Input placeholder="https://example.com" value={newUrl} onChange={(e) => setNewUrl(e.target.value)} />
-                  <Input placeholder="라벨 (선택)" value={newLabel} onChange={(e) => setNewLabel(e.target.value)} />
+                  <Input
+                    placeholder={t('bookmarks.urlPlaceholder')}
+                    value={newUrl}
+                    onChange={(e) => setNewUrl(e.target.value)}
+                  />
+                  <Input
+                    placeholder={t('bookmarks.labelPlaceholder')}
+                    value={newLabel}
+                    onChange={(e) => setNewLabel(e.target.value)}
+                  />
                   <div className="flex justify-end gap-2">
                     <button
-                      className="px-3 py-2 rounded-md text-sm font-medium bg-black text-white hover:bg-black/90"
+                      className="px-3 py-2 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:opacity-90"
                       onClick={handleAdd}
                     >
-                      추가
+                      {t('bookmarks.add')}
                     </button>
                   </div>
                 </div>
@@ -133,7 +143,7 @@ const BookmarkWidget: React.FC = () => {
             <ScrollArea className="flex-1 min-h-0">
               <div className="flex flex-col items-center justify-center  mx-3.5 gap-2">
                 {recentBookmarks.length === 0 ? (
-                  <div className="p-1 text-sm text-gray-600">저장된 북마크가 없습니다.</div>
+                  <div className="p-1 text-sm text-muted-foreground">{t('bookmarks.empty')}</div>
                 ) : (
                   recentBookmarks.map((b) => (
                     <Popover key={b.id} open={hoveredId === b.id}>
@@ -163,8 +173,8 @@ const BookmarkWidget: React.FC = () => {
                         onMouseLeave={() => scheduleClose(b.id)}
                       >
                         <button
-                          aria-label="delete bookmark"
-                          className="p-1 rounded bg-white/80 backdrop-blur-sm shadow-sm hover:bg-white"
+                          aria-label={t('bookmarks.deleteAria')}
+                          className="p-1 rounded bg-card/80 backdrop-blur-sm shadow-sm hover:bg-card"
                           onClick={() => removeBookmark(b.id)}
                         >
                           <IoTrashOutline className="w-4 h-4" />
