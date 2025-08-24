@@ -30,6 +30,8 @@ const TodoDialog: React.FC<TodoDialogProps> = ({ isOpen, setIsOpen, disabled }) 
     register,
     handleSubmit,
     formState: { errors },
+    setValue,
+    watch,
   } = useForm<Omit<Todo, 'id' | 'completed' | 'order'> & { customCategory?: string }>({
     defaultValues: {
       text: '',
@@ -139,13 +141,16 @@ const TodoDialog: React.FC<TodoDialogProps> = ({ isOpen, setIsOpen, disabled }) 
                     </>
                   ) : (
                     <Select
-                      value={newTodoDetails.category}
+                      value={watch('category')}
                       onValueChange={(value: string) => {
                         if (value === '직접 작성') {
                           setIsCustomCategory(true);
-                        } else {
+                          setValue('category', value);
                           setNewTodoDetails({ ...newTodoDetails, category: value });
+                          return;
                         }
+                        setValue('category', value);
+                        setNewTodoDetails({ ...newTodoDetails, category: value });
                       }}
                     >
                       <SelectTrigger className="col-span-3">
