@@ -754,30 +754,24 @@ chrome.runtime.onStartup.addListener(() => {
   setupTimerTracking();
 });
 
-// 탭 종료 시 타이머 중지 처리 - 사용자 확인 후에만 중지
+// 탭 종료 시 타이머 중지 처리 - 마지막 OneFocus 탭이 없으면 즉시 중지
 chrome.tabs.onRemoved.addListener(async (tabId, removeInfo) => {
   try {
     // 현재 타이머 상태 확인
     const currentState = await getFromStorage(TIMER_STATE_KEY);
 
-    console.log('currentState', currentState);
-    console.log('removeInfo', removeInfo);
+    // console.log('currentState', currentState);
+    // console.log('removeInfo', removeInfo);
 
     if (currentState?.isRunning) {
-      // OneFocus 탭이 남아있는지 확인
-      const remainingTabs = await getOneFocusTabByTitle();
+      // OneFocus 탭이 남아있는지 확인 (제목 기준 단일 탭 반환)
+      const remainingTab = await getOneFocusTabByTitle();
 
-      // OneFocus 탭이 더 이상 없으면 사용자에게 확인
-      if (remainingTabs.length === 0) {
-        console.log('모든 OneFocus 탭이 종료되었습니다. 사용자 확인을 기다립니다.');
-
-        // 사용자가 명시적으로 탭을 닫은 경우에만 타이머 중지
-        // 팝업이나 다른 창에서의 종료는 타이머를 유지
-        if (removeInfo.isWindowClosing) {
-          console.log('창이 닫혀서 타이머를 중지합니다.');
-          clearTimerState();
-          chrome.notifications.clear('timerCompleted');
-        }
+      // OneFocus 탭이 더 이상 없으면 즉시 타이머 중지
+      if (!remainingTab) {
+        // console.log('모든 OneFocus 탭이 종료되어 타이머를 중지합니다.');
+        clearTimerState();
+        chrome.notifications.clear('timerCompleted');
       }
     }
   } catch (error) {
@@ -785,7 +779,7 @@ chrome.tabs.onRemoved.addListener(async (tabId, removeInfo) => {
   }
 });
 
-// 창 종료 시 타이머 중지 처리 - 사용자 확인 후에만 중지
+// 창 종료 시 타이머 중지 처리 - 마지막 OneFocus 탭이 없으면 즉시 중지
 chrome.windows.onRemoved.addListener(async () => {
   try {
     // 현재 타이머 상태 확인
@@ -794,16 +788,9 @@ chrome.windows.onRemoved.addListener(async () => {
     console.log('currentState', currentState);
 
     if (currentState?.isRunning) {
-      // OneFocus 탭이 남아있는지 확인
-      const remainingTabs = await getOneFocusTabByTitle();
-
-      // OneFocus 탭이 더 이상 없으면 사용자에게 확인
-      if (remainingTabs.length === 0) {
-        console.log('모든 OneFocus 창이 종료되었습니다. 사용자 확인을 기다립니다.');
-
-        // 사용자가 명시적으로 창을 닫은 경우에만 타이머 중지
-        // 팝업이나 다른 창에서의 종료는 타이머를 유지
-        console.log('창이 닫혀서 타이머를 중지합니다.');
+      const remainingTab = await getOneFocusTabByTitle();
+      if (!remainingTab) {
+        console.log('모든 OneFocus 창이 종료되어 타이머를 중지합니다.');
         clearTimerState();
         chrome.notifications.clear('timerCompleted');
       }
