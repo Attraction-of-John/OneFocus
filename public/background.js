@@ -15,6 +15,20 @@ let timerCheckInterval = null;
 let lastBroadcastAt = 0; // 진행상황 브로드캐스트 스로틀
 
 /**
+ * 현재 열려 있는 OneFocus 탭을 조회
+ * - 확장 페이지 URL(chrome-extension://.../index.html)
+ * - 새 탭 오버라이드 URL(chrome://newtab/, chrome://new-tab-page/)
+ */
+async function getOneFocusTabs() {
+  const extensionUrl = chrome.runtime.getURL('index.html');
+  const allTabs = await chrome.tabs.query({});
+  return allTabs.filter((tab) => {
+    const url = tab.url || '';
+    return url.startsWith(extensionUrl);
+  });
+}
+
+/**
  * 타이머 상태를 chrome.storage.local에 저장
  */
 function saveToStorage() {
@@ -75,50 +89,43 @@ function updateTimer() {
  * 타이머 완료 시 처리
  */
 async function handleTimerCompletion() {
-  // 중복 실행 방지
-  if (!timerState?.isRunning) {
-    console.log('타이머가 이미 완료되었거나 실행 중이 아닙니다.');
-    return;
-  }
-
-  const extensionUrl = chrome.runtime.getURL('index.html');
-
   try {
     // 타이머 상태를 먼저 초기화하여 중복 실행 방지
     const currentState = { ...timerState };
     clearTimerState();
 
-    // 기존 OneFocus 탭이 있는지 먼저 확인
-    const existingTabs = await chrome.tabs.query({ url: `${extensionUrl}*` });
+    // 기존 OneFocus 탭이 있는지 먼저 확인 (확장 URL + 새 탭 오버라이드 포함)
+    const existingTabs = await getOneFocusTabs();
 
     if (existingTabs.length > 0) {
       // 기존 탭이 있으면 해당 탭을 활성화하고 완료 페이지로 이동
+
       try {
         await chrome.tabs.update(existingTabs[0].id, {
           active: true,
-          url: `${extensionUrl}#/timer-completed`,
+          url: `${chrome.runtime.getURL('index.html')}#/timer-completed`,
         });
 
-        // 창을 포커스하고 최상위로 가져오기 (windowId가 없는 경우 백업 처리)
-        const focused = await focusOrRestoreWindow(existingTabs[0].windowId);
-        if (!focused) {
-          await chrome.windows.create({
-            url: `${extensionUrl}#/timer-completed`,
-            focused: true,
-            state: 'maximized',
-            type: 'normal',
-          });
-        }
+        // // 창을 포커스하고 최상위로 가져오기 (windowId가 없는 경우 백업 처리)
+        // const focused = await focusOrRestoreWindow(existingTabs[0].windowId);
+        // if (!focused) {
+        //   await chrome.windows.create({
+        //     url: `${extensionUrl}#/timer-completed`,
+        //     focused: true,
+        //     state: 'maximized',
+        //     type: 'normal',
+        //   });
+        // }
 
         console.log('타이머 완료: 기존 OneFocus 탭이 활성화되었습니다.');
       } catch (error) {
         console.error('기존 탭 활성화 중 오류:', error);
         // 오류 발생 시 새 탭 생성
-        await createNewTabForCompletion();
+        // await createNewTabForCompletion();
       }
     } else {
       // 기존 탭이 없으면 새 탭 생성
-      await createNewTabForCompletion();
+      // await createNewTabForCompletion();
     }
 
     // 강력한 알림 표시 (기존 탭이든 새 탭이든 상관없이)
@@ -134,19 +141,6 @@ async function handleTimerCompletion() {
       requireInteraction: true, // 알림 클릭 시 닫히지 않음
       silent: false, // 알림 사운드 재생
     });
-
-    // 추가 알림 (더 강력한 시각적 효과)
-    setTimeout(() => {
-      chrome.notifications.create('timerCompletedReminder', {
-        type: 'basic',
-        iconUrl: 'extension-icons/icon128.png',
-        title: '작업 완료 알림',
-        message: '작업이 완료되었습니다. 확인해보세요!',
-        priority: 2,
-        requireInteraction: true,
-        silent: false,
-      });
-    }, 2000);
   } catch (error) {
     console.error('타이머 완료 처리 중 오류:', error);
   }
@@ -355,8 +349,7 @@ async function handleNewTabWithActiveTimer(tab) {
     );
 
     // 앱 탭이 이미 열려있으면 그 탭을 활성화
-    const appUrl = chrome.runtime.getURL('index.html');
-    const existingTabs = await chrome.tabs.query({ url: appUrl });
+    const existingTabs = await getOneFocusTabs();
     // console.log('기존 앱 탭:', existingTabs.length);
 
     if (existingTabs.length > 0) {
@@ -416,6 +409,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     case 'TIMER_COMPLETED':
       // 타이머 완료는 setupTimerTracking에서 처리하므로 여기서는 무시
       sendResponse({ status: 'success' });
+      handleTimerCompletion();
       return true;
 
     case 'GET_TIMER_MEASUREMENTS':
@@ -620,7 +614,7 @@ function handleGetSuggestions(message, sendResponse) {
 async function handleAllowNewTab(sendResponse) {
   try {
     const extensionUrl = chrome.runtime.getURL('index.html');
-    const existingTabs = await chrome.tabs.query({ url: `${extensionUrl}*` });
+    const existingTabs = await getOneFocusTabs();
 
     if (existingTabs.length > 0) {
       await chrome.tabs.update(existingTabs[0].id, { active: true, url: `${extensionUrl}` });
@@ -720,7 +714,7 @@ async function enhanceTimerCompletionNotification() {
 
     // 모든 OneFocus 탭에 강제 포커스 시도
     const extensionUrl = chrome.runtime.getURL('index.html');
-    const allTabs = await chrome.tabs.query({ url: `${extensionUrl}*` });
+    const allTabs = await getOneFocusTabs();
 
     for (const tab of allTabs) {
       try {
@@ -803,8 +797,7 @@ chrome.tabs.onRemoved.addListener(async (tabId, removeInfo) => {
 
     if (currentState?.isRunning) {
       // OneFocus 탭이 남아있는지 확인
-      const extensionUrl = chrome.runtime.getURL('index.html');
-      const remainingTabs = await chrome.tabs.query({ url: `${extensionUrl}*` });
+      const remainingTabs = await getOneFocusTabs();
 
       // OneFocus 탭이 더 이상 없으면 사용자에게 확인
       if (remainingTabs.length === 0) {
@@ -832,8 +825,7 @@ chrome.windows.onRemoved.addListener(async () => {
 
     if (currentState?.isRunning) {
       // OneFocus 탭이 남아있는지 확인
-      const extensionUrl = chrome.runtime.getURL('index.html');
-      const remainingTabs = await chrome.tabs.query({ url: `${extensionUrl}*` });
+      const remainingTabs = await getOneFocusTabs();
 
       // OneFocus 탭이 더 이상 없으면 사용자에게 확인
       if (remainingTabs.length === 0) {
@@ -858,9 +850,9 @@ chrome.notifications.onClicked.addListener(async (notificationId) => {
     chrome.notifications.clear(notificationId);
 
     // 기존 OneFocus 탭 활성화
-    const extensionUrl = chrome.runtime.getURL('index.html');
     try {
-      const tabs = await chrome.tabs.query({ url: `${extensionUrl}*` });
+      const extensionUrl = chrome.runtime.getURL('index.html');
+      const tabs = await getOneFocusTabs();
 
       if (tabs.length > 0) {
         // 기존 OneFocus 탭 활성화
@@ -913,9 +905,9 @@ chrome.notifications.onButtonClicked.addListener(async (notificationId, buttonIn
     // 확인하기 버튼 클릭 시
     chrome.notifications.clear(notificationId);
 
-    const extensionUrl = chrome.runtime.getURL('index.html');
     try {
-      const tabs = await chrome.tabs.query({ url: `${extensionUrl}*` });
+      const extensionUrl = chrome.runtime.getURL('index.html');
+      const tabs = await getOneFocusTabs();
 
       if (tabs.length > 0) {
         await chrome.tabs.update(tabs[0].id, {
