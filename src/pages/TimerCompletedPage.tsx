@@ -47,12 +47,7 @@ const TimerCompletedPage: React.FC = () => {
     navigate('/');
   };
 
-  const handleRestartTimer = () => {
-    // 같은 Todo로 타이머 다시 시작
-    resetTimer();
-    setTimerMode(true);
-    navigate('/');
-  };
+  console.log(currentTodo);
 
   return (
     <OneFocusPageLayout>
@@ -138,11 +133,6 @@ const TimerCompletedPage: React.FC = () => {
               </Button>
 
               <div className="grid grid-cols-1 gap-2">
-                <Button onClick={handleRestartTimer} variant="outline" className="w-full">
-                  <Clock className="w-4 h-4 mr-2" />
-                  다시 타이머 시작
-                </Button>
-
                 <Button onClick={handleContinueWithoutCompleting} variant="ghost" className="w-full text-gray-600">
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   완료하지 않고 돌아가기
@@ -158,7 +148,7 @@ const TimerCompletedPage: React.FC = () => {
             <div className="text-center space-y-2">
               <h3 className="font-semibold text-gray-800">오늘의 집중 시간</h3>
               <p className="text-2xl font-bold text-blue-600">
-                {currentTodo ? formatTime(currentTodo.allottedTime * 60) : '25:00'}
+                {currentTodo ? formatTime(currentTodo.allottedTime * 60) : '00:00'}
               </p>
               <p className="text-sm text-gray-600">꾸준한 집중으로 목표를 달성해보세요!</p>
             </div>

@@ -101,10 +101,10 @@ async function handleTimerCompletion() {
       // 기존 탭이 있으면 해당 탭을 활성화하고 완료 페이지로 이동
 
       try {
-        await chrome.tabs.update(existingTabs[0].id, {
-          active: true,
-          url: `${chrome.runtime.getURL('index.html')}#/timer-completed`,
-        });
+        // await chrome.tabs.update(existingTabs[0].id, {
+        //   active: true,
+        //   url: `${chrome.runtime.getURL('index.html')}#/timer-completed`,
+        // });
 
         // // 창을 포커스하고 최상위로 가져오기 (windowId가 없는 경우 백업 처리)
         // const focused = await focusOrRestoreWindow(existingTabs[0].windowId);
