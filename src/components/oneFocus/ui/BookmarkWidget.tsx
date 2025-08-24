@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { IoAddOutline, IoBookmarksOutline, IoClose, IoTrashOutline } from 'react-icons/io5';
 import { useBookmarkStore } from '@/stores/useBookmarkStore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 const BookmarkIcon: React.FC<{ url: string; label?: string }> = ({ url, label }) => {
@@ -38,9 +39,26 @@ const BookmarkIcon: React.FC<{ url: string; label?: string }> = ({ url, label })
 const BookmarkWidget: React.FC = () => {
   const { bookmarks, addBookmark, removeBookmark, setChromeBarBookmarks } = useBookmarkStore();
   const [isOpen, setIsOpen] = useState(false);
+  const [hoveredId, setHoveredId] = useState<number | null>(null);
   const [newUrl, setNewUrl] = useState('');
   const [newLabel, setNewLabel] = useState('');
-  const recentBookmarks = useMemo(() => bookmarks.slice(-5).reverse(), [bookmarks]);
+  const recentBookmarks = useMemo(() => bookmarks.slice(), [bookmarks]);
+  const closeTimerRef = useRef<number | null>(null);
+
+  const cancelClose = () => {
+    if (closeTimerRef.current) {
+      window.clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+  };
+
+  const scheduleClose = (id: number) => {
+    cancelClose();
+    closeTimerRef.current = window.setTimeout(() => {
+      setHoveredId((prev) => (prev === id ? null : prev));
+      closeTimerRef.current = null;
+    }, 150);
+  };
 
   useEffect(() => {
     if (typeof chrome === 'undefined' || !chrome.bookmarks?.getTree) return;
@@ -87,10 +105,10 @@ const BookmarkWidget: React.FC = () => {
         </button>
 
         {isOpen && (
-          <div className="absolute left-0 top-full mt-2 w-full max-h-[calc(100vh-6rem)] origin-top-left of-animate-bounce-in bg-stone-100/70 backdrop-blur-lg rounded-2xl p-3 space-y-3 shadow">
+          <div className="absolute left-0 top-full mt-2 items-center justify-center w-full h-[calc(100vh-6rem)] max-h-[calc(100vh-6rem)] origin-top-left of-animate-bounce-in bg-stone-100/70 backdrop-blur-lg rounded-2xl p-3 shadow flex flex-col gap-3 overflow-hidden">
             <Dialog>
               <DialogTrigger asChild>
-                <button className="px-2 py-2 rounded-md text-xs font-medium bg-black text-white hover:bg-black/90">
+                <button className="mx-auto flex h-8 w-8 items-center mb-2 justify-center rounded-md bg-black text-white hover:bg-black/90">
                   <IoAddOutline className="w-4 h-4" />
                 </button>
               </DialogTrigger>
@@ -112,24 +130,47 @@ const BookmarkWidget: React.FC = () => {
                 </div>
               </DialogContent>
             </Dialog>
-            <ScrollArea className="h-[calc(100vh-12rem)] pr-1">
-              <div className="flex flex-col items-center gap-2">
+            <ScrollArea className="flex-1 min-h-0">
+              <div className="flex flex-col items-center justify-center  mx-3.5 gap-2">
                 {recentBookmarks.length === 0 ? (
                   <div className="p-1 text-sm text-gray-600">저장된 북마크가 없습니다.</div>
                 ) : (
                   recentBookmarks.map((b) => (
-                    <div key={b.id} className="group of-bm-row relative flex items-center gap-2">
-                      <a href={b.url} target="_blank" rel="noreferrer" title={b.url}>
-                        <BookmarkIcon url={b.url} label={b.label} />
-                      </a>
-                      <button
-                        aria-label="delete bookmark"
-                        className="of-delete absolute left-full top-1/2 -translate-y-1/2 ml-1 p-1 rounded bg-white/70 backdrop-blur-sm shadow-sm opacity-0 transition-all duration-300 translate-x-0 group-hover:opacity-100 group-hover:translate-x-1 hover:bg-white"
-                        onClick={() => removeBookmark(b.id)}
+                    <Popover key={b.id} open={hoveredId === b.id}>
+                      <PopoverTrigger asChild>
+                        <div
+                          className="group of-bm-row relative flex items-center gap-2 w-full"
+                          onMouseEnter={() => {
+                            cancelClose();
+                            setHoveredId(b.id);
+                          }}
+                          onMouseLeave={() => scheduleClose(b.id)}
+                        >
+                          <a href={b.url} target="_blank" rel="noreferrer" title={b.url}>
+                            <BookmarkIcon url={b.url} label={b.label} />
+                          </a>
+                        </div>
+                      </PopoverTrigger>
+                      <PopoverContent
+                        side="right"
+                        align="center"
+                        sideOffset={8}
+                        className="p-1 w-auto"
+                        onMouseEnter={() => {
+                          cancelClose();
+                          setHoveredId(b.id);
+                        }}
+                        onMouseLeave={() => scheduleClose(b.id)}
                       >
-                        <IoTrashOutline className="w-4 h-4" />
-                      </button>
-                    </div>
+                        <button
+                          aria-label="delete bookmark"
+                          className="p-1 rounded bg-white/80 backdrop-blur-sm shadow-sm hover:bg-white"
+                          onClick={() => removeBookmark(b.id)}
+                        >
+                          <IoTrashOutline className="w-4 h-4" />
+                        </button>
+                      </PopoverContent>
+                    </Popover>
                   ))
                 )}
               </div>
