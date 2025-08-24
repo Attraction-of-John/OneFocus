@@ -11,6 +11,18 @@ interface BookmarkState {
 }
 
 const BOOKMARKS_KEY = 'bookmarks';
+const BOOKMARKS_IMPORTED_KEY = 'bookmarksImported';
+
+function persistBookmarks(bookmarks: BookmarkItem[]) {
+  if (typeof chrome === 'undefined' || !chrome.storage?.local) return;
+  try {
+    const toSave = bookmarks.filter((b) => typeof b.id === 'number' && b.id > 0);
+    chrome.storage.local.set({ [BOOKMARKS_KEY]: toSave });
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    // console.error('Storage set error (bookmarks):', error);
+  }
+}
 
 export const useBookmarkStore = create<BookmarkState>()(
   subscribeWithSelector((set, get) => ({
@@ -20,28 +32,46 @@ export const useBookmarkStore = create<BookmarkState>()(
       const newItem: BookmarkItem = { id: maxId + 1, ...item };
       const updated = [...get().bookmarks, newItem];
       set({ bookmarks: updated });
-      if (typeof chrome !== 'undefined' && chrome.runtime?.sendMessage) {
-        chrome.runtime.sendMessage({ type: 'ADD_BOOKMARK', bookmark: newItem });
-      }
+      persistBookmarks(updated);
     },
     removeBookmark: (id) => {
       const updated = get().bookmarks.filter((b) => b.id !== id);
       set({ bookmarks: updated });
-      if (typeof chrome !== 'undefined' && chrome.runtime?.sendMessage) {
-        chrome.runtime.sendMessage({ type: 'DELETE_BOOKMARK', id });
-      }
+      persistBookmarks(updated);
     },
     setBookmarks: (items) => {
       set({ bookmarks: items });
-      if (typeof chrome !== 'undefined' && chrome.runtime?.sendMessage) {
-        chrome.runtime.sendMessage({ type: 'SET_BOOKMARKS', bookmarks: items });
-      }
+      persistBookmarks(items);
     },
     setChromeBarBookmarks: (items) => {
-      const existing = get().bookmarks;
-      const chromeSet = items.filter((i) => !existing.some((e) => e.url === i.url));
-      const merged = [...chromeSet, ...existing];
-      set({ bookmarks: merged });
+      // 최초 1회만 크롬 북마크바를 import하여 영구 저장
+      if (typeof chrome === 'undefined' || !chrome.storage?.local) return;
+
+      chrome.storage.local.get([BOOKMARKS_IMPORTED_KEY], (res) => {
+        const alreadyImported = Boolean(res[BOOKMARKS_IMPORTED_KEY]);
+        if (alreadyImported) return; // 재유입 방지
+
+        const existing = get().bookmarks;
+        const existingUrls = new Set(existing.map((b) => b.url));
+
+        const toImport = items.filter((i) => i.url && !existingUrls.has(i.url));
+        if (toImport.length === 0) {
+          chrome.storage.local.set({ [BOOKMARKS_IMPORTED_KEY]: true });
+          return;
+        }
+
+        const startId = existing.reduce((max, b) => Math.max(max, b.id), 0);
+        const imported: BookmarkItem[] = toImport.map((i, idx) => ({
+          id: startId + idx + 1,
+          url: i.url,
+          label: i.label,
+        }));
+
+        const merged = [...existing, ...imported];
+        set({ bookmarks: merged });
+        persistBookmarks(merged);
+        chrome.storage.local.set({ [BOOKMARKS_IMPORTED_KEY]: true });
+      });
     },
   })),
 );
@@ -69,9 +99,8 @@ if (typeof chrome !== 'undefined' && chrome.storage?.local) {
 useBookmarkStore.subscribe(
   (state) => state.bookmarks,
   (bookmarks) => {
-    if (typeof chrome !== 'undefined' && chrome.runtime?.sendMessage) {
-      chrome.runtime.sendMessage({ type: 'UPDATE_BOOKMARKS', bookmarks });
-    }
+    // 상태 변경 시에도 동기화 보장
+    persistBookmarks(bookmarks);
   },
   { equalityFn: (a, b) => JSON.stringify(a) === JSON.stringify(b) },
 );
