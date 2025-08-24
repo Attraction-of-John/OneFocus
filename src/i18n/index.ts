@@ -35,6 +35,7 @@ const resources = {
         loading: 'Loading... ',
         errorPrefix: 'An error occurred: ',
         googleSearch: 'Google Search',
+        none: 'None',
       },
       bookmarks: {
         addTitle: 'Add Bookmark',
@@ -110,6 +111,7 @@ const resources = {
         loading: '로딩중...',
         errorPrefix: '에러가 발생했습니다: ',
         googleSearch: '구글 검색',
+        none: '없음',
       },
       bookmarks: {
         addTitle: '북마크 추가',

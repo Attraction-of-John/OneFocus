@@ -16,6 +16,8 @@ const OneFocusPageLayout: React.FC<{ children: React.ReactNode }> = ({ children 
           isTimerMode && isRunning ? 'backdrop-blur-xl bg-black/40' : ''
         }`}
       >
+        {/* Dark mode background dim overlay */}
+        <div className="pointer-events-none fixed inset-0 bg-black/0 dark:bg-black/30" />
         <div className="max-w-3xl mx-auto space-y-2">{children}</div>
       </div>
     </div>
