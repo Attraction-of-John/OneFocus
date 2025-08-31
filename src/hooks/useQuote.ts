@@ -14,9 +14,23 @@ const LAST_UPDATE_KEY_KO = 'lastQuoteUpdate_ko';
 const QUOTE_STORAGE_KEY_EN = 'dailyQuote_en';
 const LAST_UPDATE_KEY_EN = 'lastQuoteUpdate_en';
 
-const getTodayDateKey = (): string => {
+const getTodayDateKey = (isEnglish: boolean): string => {
   const now = new Date();
-  return now.toISOString().split('T')[0]; // YYYY-MM-DD
+  // 영어는 로컬 타임존, 한국어는 KST(Asia/Seoul) 기준으로 날짜 키 생성
+  if (isEnglish) {
+    return new Intl.DateTimeFormat('en-CA', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(now);
+  }
+
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Seoul',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(now);
 };
 
 const getKoreanQuote = (tag: KadviceTagType | undefined): Quote => {
@@ -47,7 +61,7 @@ const getStoredQuote = (isEnglish: boolean): Quote | null => {
 const setStoredQuote = (quote: Quote, isEnglish: boolean): void => {
   try {
     localStorage.setItem(isEnglish ? QUOTE_STORAGE_KEY_EN : QUOTE_STORAGE_KEY_KO, JSON.stringify(quote));
-    localStorage.setItem(isEnglish ? LAST_UPDATE_KEY_EN : LAST_UPDATE_KEY_KO, getTodayDateKey());
+    localStorage.setItem(isEnglish ? LAST_UPDATE_KEY_EN : LAST_UPDATE_KEY_KO, getTodayDateKey(isEnglish));
   } catch {
     // localStorage 저장 실패 시 무시
   }
@@ -56,7 +70,7 @@ const setStoredQuote = (quote: Quote, isEnglish: boolean): void => {
 const shouldUpdateQuote = (isEnglish: boolean): boolean => {
   try {
     const lastUpdate = localStorage.getItem(isEnglish ? LAST_UPDATE_KEY_EN : LAST_UPDATE_KEY_KO);
-    const today = getTodayDateKey();
+    const today = getTodayDateKey(isEnglish);
     return !lastUpdate || lastUpdate !== today;
   } catch {
     return true;
