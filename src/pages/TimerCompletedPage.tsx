@@ -49,7 +49,7 @@ const TimerCompletedPage: React.FC = () => {
     navigate('/');
   };
 
-  console.log(currentTodo);
+  // console.log(currentTodo);
 
   return (
     <OneFocusPageLayout>

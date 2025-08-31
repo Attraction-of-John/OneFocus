@@ -205,9 +205,4 @@ if (typeof chrome !== 'undefined' && chrome.storage?.local && chrome.runtime?.id
 }
 
 // 상태 변경 감지 및 디버깅 로그
-useTimerStore.subscribe(
-  (state) => state.isRunning,
-  (isRunning) => {
-    console.log('타이머 실행 상태 변경:', isRunning);
-  },
-);
+useTimerStore.subscribe((state) => state.isRunning);
