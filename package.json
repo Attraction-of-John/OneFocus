@@ -13,7 +13,11 @@
     "cypress:open": "cypress open",
     "cypress:run": "cypress run",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "release": "node scripts/release.js",
+    "release:patch": "npm version patch && git push --follow-tags",
+    "release:minor": "npm version minor && git push --follow-tags",
+    "release:major": "npm version major && git push --follow-tags"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
