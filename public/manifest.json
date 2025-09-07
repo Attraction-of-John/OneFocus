@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "One Focus",
   "short_name": "One Focus",
-  "version": "1.0.1",
+  "version": "1.0.0",
   "description": "One Focus enhances productivity by integrating time management, task tracking, and continuous motivation in a Chrome extension.",
 
   "chrome_url_overrides": {
