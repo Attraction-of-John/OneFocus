@@ -152,7 +152,7 @@ yarn cypress:open
 
 ## 📞 연락처
 
-프로젝트 링크: [https://github.com/your-username/one-focus](https://github.com/your-username/one-focus)
+프로젝트 링크: [https://github.com/Attraction-of-John/OneFocus](https://github.com/Attraction-of-John/OneFocus)
 
 ## 🙏 감사의 말
 
